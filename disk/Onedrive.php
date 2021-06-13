@@ -4,9 +4,15 @@ class Onedrive {
     protected $access_token;
     //protected $disktag;
 
-    function __construct($tag) {
+    
+   function __construct($tag) {
         $this->disktag = $tag;
         $this->redirect_uri = 'https://scfonedrive.github.io';
+        $this->oauth_url = 'https://login.microsoftonline.com/common/oauth2/v2.0/';
+        $this->api_url = 'https://graph.microsoft.com';
+        $this->scope = 'https://graph.microsoft.com/Application.ReadWrite.All https://graph.microsoft.com/Directory.ReadWrite.All https://graph.microsoft.com/User.ReadWrite.All https://graph.microsoft.com/RoleManagement.ReadWrite.Directory offline_access';
+        $this->scope = urlencode($this->scope);
+        if ($tag!='') {
         if (isset($_GET['AddDisk'])) {
             $this->client_id = '734ef928-d74c-4555-8d1b-d942fa0a1a41';
             $this->client_secret = '_I5gOpmG5vTC2Ts_K._wCW4nN1km~4Pk52';
@@ -14,15 +20,12 @@ class Onedrive {
             $this->client_id = getConfig('client_id', $tag);
             $this->client_secret = getConfig('client_secret', $tag);
         }
-        $this->oauth_url = 'https://login.microsoftonline.com/common/oauth2/v2.0/';
-        $this->api_url = 'https://graph.microsoft.com';
-        $this->scope = 'https://graph.microsoft.com/Application.ReadWrite.All https://graph.microsoft.com/Directory.ReadWrite.All https://graph.microsoft.com/User.ReadWrite.All https://graph.microsoft.com/RoleManagement.ReadWrite.Directory offline_access';
         $this->client_secret = urlencode($this->client_secret);
-        $this->scope = urlencode($this->scope);
         $res = $this->get_access_token();
         //$res = $this->get_access_token(getConfig('refresh_token', $tag)); ,<br>
-        
+        }
     }
+
 
     public function isfine()
     {
