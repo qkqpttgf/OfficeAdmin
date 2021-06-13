@@ -1,0 +1,7 @@
+{
+  "name": "OfficeAdmin",
+  "description": "Deploy OfficeAdmin to heroku",
+  "website": "https://github.com/qkqpttgf/OfficeAdmin",
+  "repository": "https://github.com/qkqpttgf/OfficeAdmin",
+  "success_url": "/"
+}
