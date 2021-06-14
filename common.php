@@ -287,7 +287,7 @@ function filecache($disktag)
             if ( is_writable($tmp) ) $dir = $tmp;
         } elseif ( mkdir($tmp) ) $dir = $tmp;
     }
-    $tag = __DIR__ . '/OneManager/' . $disktag;
+    $tag = __DIR__ . '/OfficeAdmin/' . $disktag;
     while (strpos($tag, '/')>-1) $tag = str_replace('/', '_', $tag);
     if (strpos($tag, ':')>-1) {
         $tag = str_replace(':', '_', $tag);
@@ -455,7 +455,7 @@ function needUpdate()
     $current_ver = explode(urldecode('%0D'),$current_ver)[0];
     $split = splitfirst($current_version, '.' . $current_ver)[0] . '.' . $current_ver;
     if (!($github_version = getcache('github_version'))) {
-        $tmp = curl('GET', 'https://raw.githubusercontent.com/qkqpttgf/OneManager-php/master/version');
+        $tmp = curl('GET', 'https://raw.githubusercontent.com/qkqpttgf/OfficeAdmin/master/version');
         if ($tmp['stat']==0) return 0;
         $github_version = $tmp['body'];
         savecache('github_version', $github_version);
@@ -1160,7 +1160,7 @@ function EnvOpt($needUpdate = 0)
         document.getElementById(\'AddDisk_link\').href="?AddDisk=" + d;
     }
 </script>';
-/*
+
         $canOneKeyUpate = 0;
         if (isset($_SERVER['USER'])&&$_SERVER['USER']==='qcloud') {
             $canOneKeyUpate = 1;
@@ -1179,7 +1179,7 @@ function EnvOpt($needUpdate = 0)
                 $canOneKeyUpate = 1;
             }
         }
-        $frame .= '<a href="https://github.com/qkqpttgf/OneManager-php" target="_blank">Github</a>';
+        $frame .= '<a href="https://github.com/qkqpttgf/OfficeAdmin" target="_blank">Github</a>';
         if (!$canOneKeyUpate) {
             $frame .= '
 ' . getconstStr('CannotOneKeyUpate') . '<br>';
@@ -1187,7 +1187,7 @@ function EnvOpt($needUpdate = 0)
             $frame .= '
 <form name="updateform" action="" method="post">
     <input type="text" name="auth" size="6" placeholder="auth" value="qkqpttgf">
-    <input type="text" name="project" size="12" placeholder="project" value="OneManager-php">
+    <input type="text" name="project" size="12" placeholder="project" value="OfficeAdmin">
     <button name="QueryBranchs" onclick="querybranchs();return false;">' . getconstStr('QueryBranchs') . '</button>
     <select name="branch">
         <option value="master">master</option>
@@ -1199,7 +1199,7 @@ function EnvOpt($needUpdate = 0)
     {
         var xhr = new XMLHttpRequest();
         xhr.open("GET", "https://api.github.com/repos/"+document.updateform.auth.value+"/"+document.updateform.project.value+"/branches");
-        //xhr.setRequestHeader("User-Agent","qkqpttgf/OneManager");
+        //xhr.setRequestHeader("User-Agent","qkqpttgf/OfficeAdmin");
         xhr.onload = function(e){
             console.log(xhr.responseText+","+xhr.status);
             if (xhr.status==200) {
@@ -1230,7 +1230,7 @@ function EnvOpt($needUpdate = 0)
         ' . str_replace("\r", '<br>', $_SERVER['github_ver_old']) . '
 </div>';
         }
-*/
+
         $frame .= '<br>
 <script src="https://cdn.bootcss.com/js-sha1/0.6.0/sha1.min.js"></script>
 <table>
