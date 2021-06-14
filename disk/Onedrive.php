@@ -4,8 +4,7 @@ class Onedrive {
     protected $access_token;
     //protected $disktag;
 
-    
-   function __construct($tag) {
+    function __construct($tag) {
         $this->disktag = $tag;
         $this->redirect_uri = 'https://scfonedrive.github.io';
         $this->oauth_url = 'https://login.microsoftonline.com/common/oauth2/v2.0/';
@@ -13,16 +12,16 @@ class Onedrive {
         $this->scope = 'https://graph.microsoft.com/Application.ReadWrite.All https://graph.microsoft.com/Directory.ReadWrite.All https://graph.microsoft.com/User.ReadWrite.All https://graph.microsoft.com/RoleManagement.ReadWrite.Directory offline_access';
         $this->scope = urlencode($this->scope);
         if ($tag!='') {
-        if (isset($_GET['AddDisk'])) {
-            $this->client_id = '734ef928-d74c-4555-8d1b-d942fa0a1a41';
-            $this->client_secret = '_I5gOpmG5vTC2Ts_K._wCW4nN1km~4Pk52';
-        } else {
-            $this->client_id = getConfig('client_id', $tag);
-            $this->client_secret = getConfig('client_secret', $tag);
-        }
-        $this->client_secret = urlencode($this->client_secret);
-        $res = $this->get_access_token();
-        //$res = $this->get_access_token(getConfig('refresh_token', $tag)); ,<br>
+            if (isset($_GET['AddDisk'])) {
+                $this->client_id = '734ef928-d74c-4555-8d1b-d942fa0a1a41';
+                $this->client_secret = '_I5gOpmG5vTC2Ts_K._wCW4nN1km~4Pk52';
+            } else {
+                $this->client_id = getConfig('client_id', $tag);
+                $this->client_secret = getConfig('client_secret', $tag);
+            }
+            $this->client_secret = urlencode($this->client_secret);
+            $res = $this->get_access_token();
+            //$res = $this->get_access_token(getConfig('refresh_token', $tag));
         }
     }
 
@@ -264,13 +263,25 @@ class Onedrive {
             $tmp['tenant_id'] = $result['id'];
             $tmp['defaultCountry'] = $result['countryLetterCode'];
 
+            $api = '/v1.0/applications/' . getConfig('client_resid', $this->disktag) . '/addPassword';
+            $data = null;
+            $data['passwordCredential']['displayName'] = '100year';
+            $data['passwordCredential']['endDateTime'] = date('Y-m-d\TH:i:s\Z', strtotime("+100 year"));
+            $arr2 = $this->MSAPI('POST', $api, json_encode($data));
+            error_log1($arr2['body']);
+            $result = json_decode($arr2['body'], true);
+            $client_secret = $result['secretText'];
+            if (!$client_secret) return message('创建secret失败，请尝试刷新能否成功<br>' . $arr2['stat'] . json_encode($result, JSON_PRETTY_PRINT), 'Create secret fail', $arr2['stat']);
+            $tmp['client_secret'] = $client_secret;
+
             $response = setConfigResponse( setConfig($tmp, $this->disktag) );
             if (api_error($response)) {
                 $html = api_error_msg($response);
                 $title = 'Error';
                 return message($html, $title, 201);
             } else {
-                $str .= '<meta http-equiv="refresh" content="5;URL=' . $url . '?setup&disktag=' . $_POST['disktag_add'] . '">';
+                $str .= '<meta http-equiv="refresh" content="5;URL=' . $url . '?setup&disktag=' . $_POST['disktag_add'] . '">
+                client_secret: ' . $client_secret . '<br>';
                 //$str = json_encode(json_decode($arr['body'], true), JSON_PRETTY_PRINT);
                 return message($str, getconstStr('Wait'), 201);
             }
@@ -301,25 +312,16 @@ class Onedrive {
             $arr1 = $this->MSAPI('POST', $api, json_encode($data));
             //$html = $arr1['stat'] . json_encode(json_decode($arr1['body'], true), JSON_PRETTY_PRINT);
             //return message($html);
-            if ($arr1['stat']!=201) return message($arr1['stat'] . json_encode(json_decode($arr1['body']), JSON_PRETTY_PRINT), 'Create client fail', $arr1['stat']);
+            if ($arr1['stat']!=201) return message('创建应用失败，请尝试刷新能否成功<br>' . $arr1['stat'] . json_encode(json_decode($arr1['body']), JSON_PRETTY_PRINT), 'Create client fail', $arr1['stat']);
             //if (!($arr['stat']==200||$arr['stat']==403||$arr['stat']==400||$arr['stat']==404)) return message($arr['stat'] . json_encode(json_decode($arr['body']), JSON_PRETTY_PRINT), 'Get followedSites', $arr['stat']);
             //error_log1($arr['body']);
             $result1 = json_decode($arr1['body'], true);
             $resId = $result1['id'];
             $client_id = $result1['appId'];
 
-            $api = '/v1.0/applications/' . $resId . '/addPassword';
-            $data = null;
-            $data['passwordCredential']['displayName'] = '100year';
-            $data['passwordCredential']['endDateTime'] = date('Y-m-d\TH:i:s\Z', strtotime("+100 year"));
-            $arr2 = $this->MSAPI('POST', $api, json_encode($data));
-            error_log1($arr2['body']);
-            $result = json_decode($arr2['body'], true);
-            $client_secret = $result['secretText'];
-
             $tmptoken['client_resid'] = $resId;
             $tmptoken['client_id'] = $client_id;
-            $tmptoken['client_secret'] = $client_secret;
+            
             $response = setConfigResponse( setConfig($tmptoken, $this->disktag) );
             if (api_error($response)) {
                 $html = api_error_msg($response);
@@ -329,10 +331,9 @@ class Onedrive {
 
             $title = 'Create Client';
             $html = 'client_id: ' . $client_id . '<br>
-            client_secret: ' . $client_secret . '<br>
             <a href="https://portal.azure.com/#blade/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/CallAnAPI/appId/' . $client_id . '/isMSAApp/" target="_blank">Click here</a> add scope: <br>
-            点击跳转，去代表组织同意，再来这点下一步。
-            Then <a href="' . $url . '?AddDisk=' . get_class($this) . '&disktag=' . $_GET['disktag'] . '&CreateClient1">next step</a>';
+            点击跳转，去代表组织同意，再来这点下一步。<br>
+            Then <a href="' . $url . '?AddDisk=' . get_class($this) . '&disktag=' . $_GET['disktag'] . '&CreateClient1">next step下一步</a>';
             return message($html, $title, 201);
         }
 
@@ -360,7 +361,7 @@ class Onedrive {
                     $title = 'Error';
                     return message($html, $title, 201);
                 } else {
-                    savecache('access_token', $ret['access_token'], $this->disktag, $ret['expires_in'] - 60);
+                    savecache('tmp_access_token', $ret['access_token'], $this->disktag, $ret['expires_in'] - 60);
                     $str .= '
                 <meta http-equiv="refresh" content="3;URL=' . $url . '?AddDisk=' . get_class($this) . '&disktag=' . $_GET['disktag'] . '&CreateClient0">';
                     return message($str, getconstStr('Wait') . ' 3s', 201);
@@ -513,7 +514,7 @@ class Onedrive {
             $this->error = $tmp;
             return false;
         }
-        if (!($this->access_token = getcache('access_token', $this->disktag))) {
+        if (!($this->access_token = getcache('tmp_access_token', $this->disktag))) {
             $p=0;
             while ($response['stat']==0&&$p<3) {
                 $response = curl('POST', $this->oauth_url . 'token', 'client_id=' . $this->client_id . '&client_secret=' . $this->client_secret . '&grant_type=refresh_token&requested_token_use=on_behalf_of&refresh_token=' . $refresh_token );
@@ -534,7 +535,7 @@ class Onedrive {
             $tmp['refresh_token'] = substr($tmp['refresh_token'], 0, 10) . '******';
             error_log1('[' . $this->disktag . '] Get access token:' . json_encode($tmp, JSON_PRETTY_PRINT));
             $this->access_token = $ret['access_token'];
-            savecache('access_token', $this->access_token, $this->disktag, $ret['expires_in'] - 300);
+            savecache('tmp_access_token', $this->access_token, $this->disktag, $ret['expires_in'] - 300);
             if (time()>getConfig('token_expires', $this->disktag)) setConfig([ 'refresh_token' => $ret['refresh_token'], 'token_expires' => time()+7*24*60*60 ], $this->disktag);
             return true;
         }
@@ -564,7 +565,7 @@ class Onedrive {
                 if (substr($url,-1)=='/') $url=substr($url,0,-1);
             }
             if ($method=='GET') {
-                $method='GET'; // do nothing
+                $method = 'GET'; // do nothing
             } elseif ($method=='PUT') {
                 if ($path=='' or $path=='/') {
                     $url .= 'content';
