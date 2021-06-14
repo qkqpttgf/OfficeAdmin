@@ -146,7 +146,10 @@ function main($path)
     }
 
     // login
-    if (!$_SERVER['admin']) return adminform();
+    if (!$_SERVER['admin']) {
+        if (isset($_GET['a'])&&$_GET['a']==='getusers') return output(response(1, "过期，请重新登录"));
+        else return adminform();
+    }
 
     if (isset($_GET['setup']))
         if ($_SERVER['admin']) {
@@ -611,7 +614,6 @@ function adminoperate()
             'password' => $password,
             'forceChangePassword' => $_POST['forceChangePassword'],
             'location' => $_POST['location'],
-            
         ];
 
         $result = $drive->admin_create_user($request);
@@ -697,11 +699,13 @@ function getRandomPass($user) {
     $max = rand(8, 10);
     while ($p == 0) {
         $strPol = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-        $max1 = rand(1, 3);
+        $max1 = rand(1, 2);
+        if (strlen($str)>0) $max1 = $max - strlen($str);
         for ($i=0;$i<$max1;$i++) $str .= $strPol[rand(0, 25)];
 
         $strPol = 'abcdefghijklmnopqrstuvwxyz';
-        $max2 = rand(2, 4);
+        $max2 = rand(1, 2);
+        if (strlen($str)>0) $max2 = $max - strlen($str);
         for ($i=0;$i<$max2;$i++) $str .= $strPol[rand(0, 25)];
 
         $strPol = '0123456789';
@@ -709,10 +713,9 @@ function getRandomPass($user) {
         for ($i=0;$i<$max3;$i++) $str .= $strPol[rand(0, 9)];
 
         if (strpos(strtolower($str), strtolower($user))===false) $p = 1;
-        else {
+        else while (strpos(strtolower($str), strtolower($user))>-1) {
             $t = strpos(strtolower($str), strtolower($user));
             $str = substr($str, 0, $t) . substr($str, $t+strlen($user));
-            //$str = str_replace(strtolower($user), '', strtolower($str));
         }
     }
     
@@ -1466,7 +1469,7 @@ function render_list($drive = null)
                   <input type="text" placeholder="英文/拼音" class="layui-input" id="firstname" pattern="[A-z0-9]{1,50}">
                 </div>
               </div>
-    
+
               <div class="layui-form-item">
                 <label class="layui-form-label">用户账号 *</label>
                 <div class="layui-input-inline">
@@ -1548,7 +1551,7 @@ function render_list($drive = null)
               </div>
               <div class="layui-form-item">
                 <div class="layui-input-block">
-                  <button class="layui-btn" lay-filter="formDemo" id="submitaccount" type="button">立即提交</button>
+                  <button class="layui-btn" lay-filter="submitaccount" id="submitaccount" type="button">立即提交</button>
                 </div>
               </div>
             </form>  
@@ -1633,7 +1636,7 @@ function render_list($drive = null)
                       });
                   }
                   if(obj.event === \'accountactive\'){
-                      layer.confirm(\'允许登录?\', function(index){
+                      layer.confirm(\'允许 \' + obj.data.userPrincipalName + \' 登录?\', function(index){
                           $.post("?a=invitation_code_activeaccount&account=' . $_SERVER['disktag'] . '",{email:obj.data.userPrincipalName},function(res){
                            if (res.code == 1) {
                               layer.closeAll();
@@ -1649,7 +1652,7 @@ function render_list($drive = null)
                       });
                   }
                   if(obj.event === \'setuserasadminbyid\'){
-                      layer.confirm(\'设为管理?\', function(index){
+                      layer.confirm(\'设 \' + obj.data.userPrincipalName + \' 为管理?\', function(index){
                           $.post("?a=invitation_code_setuserasadminbyid&account=' . $_SERVER['disktag'] . '",{id:obj.data.id},function(res){
                            if (res.code == 1) {
                               layer.closeAll();
@@ -1665,7 +1668,7 @@ function render_list($drive = null)
                       });
                   }
                   if(obj.event === \'deluserasadminbyid\'){
-                      layer.confirm(\'取消管理?\', function(index){
+                      layer.confirm(\'取消 \' + obj.data.userPrincipalName + \' 管理?\', function(index){
                           $.post("?a=invitation_code_deluserasadminbyid&account=' . $_SERVER['disktag'] . '",{id:obj.data.id},function(res){
                            if (res.code == 1) {
                               layer.closeAll();
@@ -1682,7 +1685,7 @@ function render_list($drive = null)
                   }
     
                   if(obj.event === \'accountinactive\'){
-                      layer.confirm(\'禁止登录?\', function(index){
+                      layer.confirm(\'禁止 \' + obj.data.userPrincipalName + \' 登录?\', function(index){
                           $.post("?a=invitation_code_inactiveaccount&account=' . $_SERVER['disktag'] . '",{email:obj.data.userPrincipalName},function(res){
                            if (res.code == 1) {
                               layer.closeAll();
@@ -1711,12 +1714,12 @@ function render_list($drive = null)
                         location.href = "?account=" + account;
                     });
                 });
-                $(\'#change_account\').click(function(){
+                /*$(\'#change_account\').click(function(){
                     layer.confirm(\'确认切换全局?\', function(index){
                         var account = $(\'#account\').val();
                         location.href = "?account=" + account;
                     });
-                });
+                });*/
                 $(\'#logout\').click(function(){
                       layer.confirm(\'确认注销登录?\', function(index){
                           var expd = new Date();
@@ -1743,6 +1746,10 @@ function render_list($drive = null)
                     });
                 });
                 $(\'#submitaccount\').click(function(){
+                    if ($(\'#add_user\').val()=="") {
+                        layer.msg("输入用户名");
+                        return false;
+                    }
                     var data = {
                         firstname:$(\'#firstname\').val(),
                         lastname:$(\'#lastname\').val(),
@@ -1754,20 +1761,36 @@ function render_list($drive = null)
                         sku:$(\'#sku\').val(),
                     };
                     $.post("?a=admin_add_account&account=' . $_SERVER['disktag'] . '",data,function(res){
-                        console.log(res.msg);
+                        console.log(res.code + res.msg);
                         if (res.code == 0) {
                             let r = JSON.parse(res.msg);
-                            alert("用户名：" + r.userPrincipalName + "\n密码：" + r.password);
-                            layer.closeAll();
-                            layui.use(\'table\', function(){
-                                var table = layui.table;
-                                table.reload(\'table\', { //表格的id
-                                    url:"?a=getusers&account=' . $_SERVER['disktag'] . '",
-                                });
-                            })
                             layer.msg(r.msg);
+                            layer.confirm("用户名：" + r.userPrincipalName + "<br>密码：" + r.password, {btn: ["复制", "确认"]}, function(index){
+                                layer.closeAll();
+                                let tmptextarea=document.createElement(\'textarea\');
+                                document.body.appendChild(tmptextarea);
+                                tmptextarea.setAttribute(\'style\', \'position:absolute;left:-100px;width:0px;height:0px;\');
+                                tmptextarea.innerHTML = "用户名：" + r.userPrincipalName + "\n密码：" + r.password;
+                                tmptextarea.select();
+                                tmptextarea.setSelectionRange(0, tmptextarea.value.length);
+                                document.execCommand("copy");
+                                layer.msg("复制成功");
+                                layui.use(\'table\', function(){
+                                    var table = layui.table;
+                                    table.reload(\'table\', { //表格的id
+                                        url:"?a=getusers&account=' . $_SERVER['disktag'] . '",
+                                    });
+                                });
+                            }, function (index) {
+                                layer.closeAll();
+                                layui.use(\'table\', function(){
+                                    var table = layui.table;
+                                    table.reload(\'table\', { //表格的id
+                                        url:"?a=getusers&account=' . $_SERVER['disktag'] . '",
+                                    });
+                                });
+                            });
                         } else {
-                            //console.log(res.code + res.msg);
                             if (res.code > 1) alert(res.code + JSON.parse(res.msg).error.message);
                             else {
                                 alert(res.code + JSON.parse(res.msg).msg);
