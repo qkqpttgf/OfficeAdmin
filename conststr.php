@@ -5,25 +5,29 @@ global $constStr;
 
 global $license;
 $license = [
-    'E5' => [
+    'DEVELOPERPACK_E5' => [
         'skuid' => 'c42b9cae-ea4f-4ab7-9717-81576235ccac',
         'name' => 'E5开发者'
     ],
-    'A1_stu' => [
+    'FLOW_FREE' => [
+        'skuid' => 'f30db892-07e9-47e9-837c-80727f46fd3d',
+        'name' => 'Microsoft Power Automate Free'
+    ],
+    'STANDARDWOFFPACK_FACULTY' => [
         'skuid' => '94763226-9b3c-4e75-a931-5c89701abe66',
+        'name' => 'A1教职工'
+    ],
+    'STANDARDWOFFPACK_STUDENT' => [
+        'skuid' => '314c4481-f395-4525-be8b-2ec4bb1e9d91',
         'name' => 'A1学生'
     ],
-    'A1_fac' => [
-        'skuid' => '314c4481-f395-4525-be8b-2ec4bb1e9d91',
-        'name' => 'A1教职'
-    ],
-    'A1P_stu' => [
+    'STANDARDWOFFPACK_IW_STUDENT' => [
         'skuid' => 'e82ae690-a2d5-4d76-8d30-7c6e01e6022e',
         'name' => 'A1P学生'
     ],
-    'A1P_fac' => [
+    'STANDARDWOFFPACK_IW_FACULTY' => [
         'skuid' => '78e66a63-337a-4a9a-8959-41c6654dfb56',
-        'name' => 'A1P教职'
+        'name' => 'A1P教职工'
     ]
 ];
 
