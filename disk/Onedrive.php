@@ -20,8 +20,10 @@ class Onedrive {
                 $this->client_secret = getConfig('client_secret', $tag);
             }
             $this->client_secret = urlencode($this->client_secret);
+            $this->tenant_id = getConfig('tenant_id', $tag);
+            $this->oauth_url1 = 'https://login.microsoftonline.com/' . $this->tenant_id . '/oauth2/v2.0/token';
             $res = $this->get_access_token();
-            //$res = $this->get_access_token(getConfig('refresh_token', $tag));
+            //$res = $this->get_access_token1(getConfig('refresh_token', $tag));
         }
     }
 
@@ -49,7 +51,7 @@ class Onedrive {
         $url='/beta/users/?$select=displayName,accountEnabled,usageLocation,id,userPrincipalName,createdDateTime,assignedLicenses';
         return $this->MSAPI('GET', $url);
     }
-    public function admin_create_user($request){
+    public function admin_create_user ($request){
         $url = '/v1.0/users';
         $user_email = $request['username'] . '@' . $request['domain'];
         if ($request['firstname']!=''||$request['lastname']!='') $displayName = $request['firstname'] . ' ' . $request['lastname'];
@@ -68,7 +70,7 @@ class Onedrive {
         ];
         return $this->MSAPI('POST', $url, json_encode($data));
     }
-    public function addsubscribe($user_email, $sku_id){
+    public function addsubscribe ($user_email, $sku_id){
         $url = '/v1.0/users/' . $user_email . '/assignLicense';
         $data = [
             'addLicenses' => [
@@ -81,7 +83,20 @@ class Onedrive {
         ];
         return $this->MSAPI('POST', $url, json_encode($data));
     }
-    public function accountdelete($user_email){
+    public function addsubscribes ($user_email, $sku_ids){
+        $url = '/v1.0/users/' . $user_email . '/assignLicense';
+        $data['removeLicenses'] = [];
+        $i = 0;
+        foreach ($sku_ids as $sku_id) {
+            $data['addLicenses'][$i] = [
+                'disabledPlans' => [],
+                'skuId' => $sku_id
+            ];
+            $i++;
+        }
+        return $this->MSAPI('POST', $url, json_encode($data));
+    }
+    public function accountdelete ($user_email){
         $url="/beta/users/" . $user_email;
         return $this->MSAPI('DELETE', $url);
     }
@@ -281,6 +296,7 @@ class Onedrive {
                 return message($html, $title, 201);
             } else {
                 $str .= '<meta http-equiv="refresh" content="5;URL=' . $url . '?setup&disktag=' . $_POST['disktag_add'] . '">
+                tenant_id: ' . $tmp['tenant_id'] . '<br>
                 client_secret: ' . $client_secret . '<br>';
                 //$str = json_encode(json_decode($arr['body'], true), JSON_PRETTY_PRINT);
                 return message($str, getconstStr('Wait'), 201);
@@ -329,9 +345,12 @@ class Onedrive {
                 return message($html, $title, 201);
             }
 
+            if (get_class($this)=='Onedrive') $host = 'portal.azure.com';
+            elseif (get_class($this)=='OnedriveCN') $host = 'portal.azure.cn';
+            else return message('Drive ver Error', 'Error', 201);
             $title = 'Create Client';
             $html = 'client_id: ' . $client_id . '<br>
-            <a href="https://portal.azure.com/#blade/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/CallAnAPI/appId/' . $client_id . '/isMSAApp/" target="_blank">Click here</a> add scope: <br>
+            <a href="https://' . $host . '/#blade/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/CallAnAPI/appId/' . $client_id . '/isMSAApp/" target="_blank">Click here</a> add scope: <br>
             点击跳转，去代表组织同意，再来这点下一步。<br>
             Then <a href="' . $url . '?AddDisk=' . get_class($this) . '&disktag=' . $_GET['disktag'] . '&CreateClient1">next step下一步</a>';
             return message($html, $title, 201);
@@ -433,10 +452,12 @@ class Onedrive {
         ' . getconstStr('DiskName') . ':
         <input type="text" name="diskname" placeholder="' . getconstStr('EnvironmentsDescription')['diskname'] . '" style="width:100%"><br>
         <br>
-        <div>
-            <label><input type="radio" name="Drive_ver" value="Onedrive" checked>MS: ' . getconstStr('DriveVerMS') . '</label><br>
-
-            <!--<label><input type="radio" name="Drive_ver" value="OnedriveCN">CN: ' . getconstStr('DriveVerCN') . '</label><br>-->
+        <div>';
+        if (get_class($this)=='Onedrive') $html .='
+            <label><input type="radio" name="Drive_ver" value="Onedrive" checked>MS: ' . getconstStr('DriveVerMS') . '</label><br>';
+        elseif (get_class($this)=='OnedriveCN') $html .='
+            <label><input type="radio" name="Drive_ver" value="OnedriveCN" checked>CN: ' . getconstStr('DriveVerCN') . '</label><br>';
+        $html .= '
         </div>
         <br>';
         if ($_SERVER['language']=='zh-cn') $html .= '你要理解 scfonedrive.github.io 是github上的静态网站，<br><font color="red">除非github真的挂掉</font>了，<br>不然，稍后你如果<font color="red">连不上</font>，请检查你的运营商或其它“你懂的”问题！<br>';
@@ -477,12 +498,9 @@ class Onedrive {
 
     protected function get_access_token() {
         if (!($this->access_token = getcache('access_token', $this->disktag))) {
-            $client_id = getConfig('client_id', $this->disktag);
-            $client_secret = getConfig('client_secret', $this->disktag);
-            $tenant_id = getConfig('tenant_id', $this->disktag);
-            $url = 'https://login.microsoftonline.com/' . $tenant_id . '/oauth2/v2.0/token';
-            $scope = 'https://graph.microsoft.com/.default';
-            $data = 'grant_type=client_credentials&client_id=' . $client_id . '&client_secret=' . $client_secret . '&scope=' . $scope;
+            $url = $this->oauth_url1;
+            $scope = $this->api_url . '/.default';
+            $data = 'grant_type=client_credentials&client_id=' . $this->client_id . '&client_secret=' . $this->client_secret . '&scope=' . $scope;
             $p=0;
             while ($response['stat']==0&&$p<3) {
                 $response = curl('POST', $url, $data);
