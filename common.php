@@ -592,10 +592,10 @@ function adminoperate()
                 if($v1['skuId'] == ""){
                     $value[$k]['sku'] .= '无许可';
                 } elseif (isset($skuId[$v1['skuId']])) {
-                    if ($value[$k]['sku']!='') $value[$k]['sku'] .= ';';
+                    if ($value[$k]['sku']!='') $value[$k]['sku'] .= '<br>';
                     $value[$k]['sku'] .= $skuId[$v1['skuId']];
                 } else {
-                    if ($value[$k]['sku']!='') $value[$k]['sku'] .= ';';
+                    if ($value[$k]['sku']!='') $value[$k]['sku'] .= '<br>';
                     $value[$k]['sku'] .= '未知';
                 };
             }
@@ -620,8 +620,8 @@ function adminoperate()
         if ($result['stat']==201) {
             $data['password'] = $password;
             $data['userPrincipalName'] = json_decode($result['body'], true)['userPrincipalName'];
-            if ($_POST['sku']!='') {
-                $result = $drive->addsubscribe($request['username'] . '@' . $request['domain'], $_POST['sku']);
+            if (!!$_POST['sku']) {
+                $result = $drive->addsubscribes ($request['username'] . '@' . $request['domain'], $_POST['sku']);
                 //error_log1('Addlin' . json_encode($result));
                 if ($result['stat']==200) {
                     $data['msg'] = '创建成功，分配许可成功';
@@ -681,6 +681,7 @@ function adminoperate()
     }
     if ($_GET['a'] == 'invitation_code_deluserasadminbyid') {
         $user_id = !empty($_POST['id']) ? $_POST['id'] : 0;
+        //error_log1(json_encode($_POST));
         $result = $drive->deluserasadminbyid($user_id);
         if ($result['stat']!=204) {
             return output(response(1, "取消管理失败" . json_encode($result)));
@@ -688,7 +689,6 @@ function adminoperate()
             return output(response(0, "取消管理成功"));
         }
     }
-
 
     return $tmparr;
 }
@@ -1405,9 +1405,16 @@ function render_list($drive = null)
     <html>
         <head>
             <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+            <meta name=viewport content="width=device-width,initial-scale=1">
             <title>Microsoft Office365 全局管理</title>
             <link rel="stylesheet" href="layui/css/layui.css">
             <link href="files/mslogo.png" rel="icon" type="image/png">
+            <style type="text/css">
+                .layui-table-cell {
+                    height: auto;
+                    line-height: 28px;
+                }
+            </style>
         </head>
         <body class="layui-layout-body" style="overflow-y:visible;background: #fff;">
             <div class="layui-form">
@@ -1524,12 +1531,7 @@ function render_list($drive = null)
               </div>
               <div class="layui-form-item">
                 <label class="layui-form-label">许可证</label>
-                <div class="layui-input-inline">
-                  <select name="sku" id="sku">
-                    <option value="">' . '未选择</option>';
-                    //echo json_encode($drive->getSku(), JSON_PRETTY_PRINT);
-                    /*$skustr = getConfig('sku', $_SERVER['disktag']);
-                    $skus = explode('|', $skustr);*/
+                <div class="layui-input-inline">';
                     $skuId = null;
                     foreach ($license as $k => $v) {
                         $skuId[$v['skuid']] = $v['name'];
@@ -1543,10 +1545,9 @@ function render_list($drive = null)
                                 $name = $v['name'];
                             }
                             $html .= '
-                           <option value="' . $id . '">' . $name . '(' . $v['used'] . '/' . $v['total'] . ')</option>';
+                            <input type="checkbox" name="sku" title="' . $name . '(' . $v['used'] . '/' . $v['total'] . ')" value="' . $id . '" lay-skin="primary"' . (($v['total']-$v['used']<1)?' disabled':'') . '>';
                         }
                         $html .= '
-                  </select>
                 </div>
               </div>
               <div class="layui-form-item">
@@ -1605,13 +1606,13 @@ function render_list($drive = null)
                       }},
                       {field:\'usageLocation\',title: \'usageLocation\',align: \'center\'},
     
-                      {field:\'id\',title: \'id\',align: \'center\',templet:function(d){
+                      /*{field:\'id\',title: \'id\',align: \'center\',templet:function(d){
                               if(d.id){
                                   return d.id;
                               }else{
                                   return \'-\';
                               }
-                      }},
+                      }},*/
                       {field:\'createdDateTime\', title: \'创建时间\',align: \'center\'},
                       {field:\'sku\', title: \'许可证\',align: \'center\',templet:function(d){
                               if(d.sku == \'无许可\'){
@@ -1620,7 +1621,7 @@ function render_list($drive = null)
                                   return d.sku;
                               }
                       }},
-                      {fixed:\'right\',title: \'操作\', width: 335, align:\'center\', toolbar: \'#buttons\'}
+                      {/*fixed:\'right\',*/title: \'操作\', width: 335, align:\'center\', toolbar: \'#buttons\'}
                     ]]
               });
                //监听
@@ -1750,6 +1751,10 @@ function render_list($drive = null)
                         layer.msg("输入用户名");
                         return false;
                     }
+                    let skus = new Array();
+                    $("input:checkbox[name=\'sku\']:checked").each(function(i){
+                        skus[i] = $(this).val();
+                    });
                     var data = {
                         firstname:$(\'#firstname\').val(),
                         lastname:$(\'#lastname\').val(),
@@ -1758,7 +1763,7 @@ function render_list($drive = null)
                         password:$(\'#password\').val(),
                         forceChangePassword:$(\'#forceChangePassword\').is(\':checked\'),
                         location:$(\'#location\').val(),
-                        sku:$(\'#sku\').val(),
+                        sku:skus,
                     };
                     $.post("?a=admin_add_account&account=' . $_SERVER['disktag'] . '",data,function(res){
                         console.log(res.code + res.msg);
