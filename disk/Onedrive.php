@@ -51,6 +51,20 @@ class Onedrive {
         $url='/beta/users/?$select=displayName,accountEnabled,usageLocation,id,userPrincipalName,createdDateTime,assignedLicenses';
         return $this->MSAPI('GET', $url);
     }
+    public function getGlobalAdmins() {
+        if (!($GlobalAdmins=getcache('GlobalAdmins', $this->disktag))) {
+            $url="/v1.0/directoryRoles/roleTemplateId=62e90394-69f5-4237-9190-012177145e10/members";
+            $response = $this->MSAPI('GET', $url);
+            if ($response['stat']!=200) return $response;
+            $result = json_decode($response['body'], true)['value'];
+            foreach ($result as $k) {
+                $GlobalAdmins[$k['userPrincipalName']] = $k;
+                //$GlobalAdmins[$k['mail']] = $k;
+            }
+            savecache('GlobalAdmins', $GlobalAdmins, $this->disktag);
+        }
+        return $GlobalAdmins;
+    }
     public function admin_create_user ($request){
         $url = '/v1.0/users';
         $user_email = $request['username'] . '@' . $request['domain'];
@@ -120,6 +134,7 @@ class Onedrive {
         //useradmin:fe930be7-5e62-47db-91af-98c3a49a38b1
         //globalAdmin:62e90394-69f5-4237-9190-012177145e10
         //Privileged role Admin:e8611ab8-c189-46e8-94e1-60213ab1f814
+        savecache('GlobalAdmins', [], $this->disktag, 1);
         return $this->MSAPI('POST', $url, $jsdata);
     }
     public function deluserasadminbyid($user_id) {
@@ -128,6 +143,7 @@ class Onedrive {
         //useradmin:fe930be7-5e62-47db-91af-98c3a49a38b1
         //globalAdmin:62e90394-69f5-4237-9190-012177145e10
         //Privileged role Admin:e8611ab8-c189-46e8-94e1-60213ab1f814
+        savecache('GlobalAdmins', [], $this->disktag, 1);
         return $this->MSAPI('DELETE', $url);
     }
 
