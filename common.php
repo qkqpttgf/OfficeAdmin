@@ -647,6 +647,30 @@ function adminoperate()
             return output(response($result['stat'], $result['body']));
         }
     }
+    if ($_GET['a'] == 'add_subscribe') {
+        /*$del_sku = null;
+        if ($_POST['assignedLicenses']) {
+            $assignedLicenses = json_decode($_POST['assignedLicenses'], true);
+            foreach ($assignedLicenses as $k => $v) {
+                $del_sku[$k] = $v['skuId'];
+            }
+        }*/
+        $del_sku = json_decode($_POST['assignedLicenses'], true);
+        foreach ($_POST['sku'] as $k => $v) {
+            if (in_array($v, $del_sku)) array_diff($del_sku, [ $v ]);
+        }
+        //if (!!$_POST['sku']) {
+            $result = $drive->addsubscribes ($_POST['user_email'], $_POST['sku'], $del_sku);
+            //error_log1('Addlin' . json_encode($result));
+            if ($result['stat']==200) {
+                $data['msg'] = '分配许可成功';
+                return output(response(0, json_encode($data))); //创建成功，分配许可成功
+            } else {
+                $data['msg'] = '分配许可失败';
+                return output(response(1, json_encode($data))); //创建成功，分配许可失败
+            }
+        //}
+    }
     if ($_GET['a'] == 'admin_delete') {
         $result = $drive->accountdelete($_POST['email']);
         if ($result['stat']==204) return output(response(0, '删除 ' . $_POST['email'] . ' 成功'));
@@ -1562,8 +1586,39 @@ function render_list($drive = null)
                   <button class="layui-btn" lay-filter="submitaccount" id="submitaccount" type="button">立即提交</button>
                 </div>
               </div>
-            </form>  
+            </form>
             </div>';
+            $html .= '
+            <div id="addsubscribe" class="layui-form layui-form-pane" style="display: none;margin:1rem 3rem;">
+            <form class="layui-form" ><div class="layui-form-item">
+            <div class="layui-input-inline">
+                  <input type="hidden" class="layui-input" id="user_email" name="user_email" pattern="[A-z0-9]{1,50}" required lay-verify="required">
+                </div>
+                <div class="layui-input-inline">
+                  <input type="hidden" class="layui-input" id="assignedLicenses" name="assignedLicenses" required lay-verify="required">
+                </div>
+            <label class="layui-form-label">许可证</label>
+            <div class="layui-input-inline">';
+                    foreach ($skus as $id => $v) {
+                        $name = '';
+                        if (isset($skuId[$id])) {
+                            $name = $skuId[$id];
+                        } else {
+                            $name = $v['name'];
+                        }
+                        $html .= '
+                        <input type="checkbox" name="sku1" title="' . $name . '(' . $v['used'] . '/' . $v['total'] . ')" value="' . $id . '" lay-skin="primary"' . (($v['total']-$v['used']<1)?' disabled':'') . '>';
+                    }
+                    $html .= '
+            </div>
+          </div>
+          <div class="layui-form-item">
+            <div class="layui-input-block">
+              <button class="layui-btn" lay-filter="submitaddsubscribe" id="submitaddsubscribe" type="button">立即提交</button>
+            </div>
+          </div>
+        </form>
+        </div>';
                     }
                     $html .= '
         </body>
@@ -1579,6 +1634,7 @@ function render_list($drive = null)
             {{# } else { }}
             <a class="layui-btn layui-btn-normal layui-btn-xs" lay-event="deluserasadminbyid">取消管理</a>
             {{# } }}
+            <a class="layui-btn layui-btn-primary layui-btn-xs" lay-event="addsubscribe">分配订阅</a>
             <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
         </script>
         <script src="./layui/layui.js" charset="utf-8"></script>
@@ -1671,38 +1727,72 @@ function render_list($drive = null)
                           },\'json\');
                       });
                   }
-                  if(obj.event === \'setuserasadminbyid\'){
-                      layer.confirm(\'设 \' + obj.data.userPrincipalName + \' 为管理?\', function(index){
-                          $.post("?a=invitation_code_setuserasadminbyid&account=' . $_SERVER['disktag'] . '",{id:obj.data.id},function(res){
-                           if (res.code == 1) {
-                              layer.closeAll();
-                              layui.use(\'table\', function(){
-                                  var table = layui.table;
-                                  table.reload(\'table\', { //表格的id
-                                      url:"?a=getusers&account=' . $_SERVER['disktag'] . '",
-                                  });
-                                 })
+                    if(obj.event === \'setuserasadminbyid\'){
+                        layer.confirm(\'设 \' + obj.data.userPrincipalName + \' 为管理?\', function(index){
+                            $.post("?a=invitation_code_setuserasadminbyid&account=' . $_SERVER['disktag'] . '",{id:obj.data.id},function(res){
+                            if (res.code == 1) {
+                                layer.closeAll();
+                                layui.use(\'table\', function(){
+                                    var table = layui.table;
+                                    table.reload(\'table\', { //表格的id
+                                        url:"?a=getusers&account=' . $_SERVER['disktag'] . '",
+                                    });
+                                    })
+                                }
+                                layer.msg(res.msg);
+                            },\'json\');
+                        });
+                    }
+                    if(obj.event === \'deluserasadminbyid\'){
+                        layer.confirm(\'取消 \' + obj.data.userPrincipalName + \' 管理?\', function(index){
+                            $.post("?a=invitation_code_deluserasadminbyid&account=' . $_SERVER['disktag'] . '",{id:obj.data.id},function(res){
+                            if (res.code == 1) {
+                                layer.closeAll();
+                                layui.use(\'table\', function(){
+                                    var table = layui.table;
+                                    table.reload(\'table\', { //表格的id
+                                        url:"?a=getusers&account=' . $_SERVER['disktag'] . '",
+                                    });
+                                })
                             }
                             layer.msg(res.msg);
-                          },\'json\');
-                      });
+                            },\'json\');
+                        });
+                    }
+                  if(obj.event === \'addsubscribe\'){
+                    layer.open({
+                        type: 1,
+                        title:\'分配订阅\',
+                        end: function(){
+                            $(\'#addsubscribe\').hide();
+                          },
+                        skin: \'layui-layer-rim\', //加上边框
+                        //area: [\'48rem;\', \'28rem;\'], //宽高
+                        content: $(\'#addsubscribe\'),
+                        success: function(layero, index) {
+                            layero.find(\'input[name=user_email]\').val(obj.data.userPrincipalName);
+                            let licenses = new Array();
+                            let i = 0;
+                            obj.data.assignedLicenses.forEach(function(d){
+                                //console.log(d);
+                                licenses[i] = d.skuId;
+                                i++;
+                            });
+                            layero.find(\'input[name=assignedLicenses]\').val(JSON.stringify(licenses));
+                            //console.log(licenses);
+                            $("input:checkbox[name=\'sku1\']").each(function(i){
+                                //console.log($(this));
+                                if (licenses.indexOf($(this).val())>-1) {
+                                    $(this).attr("checked","checked");
+                                } else {
+                                    $(this).removeAttr("checked");
+                                }
+                            });
+                            form.render("checkbox");
+                        }
+                    });
                   }
-                  if(obj.event === \'deluserasadminbyid\'){
-                      layer.confirm(\'取消 \' + obj.data.userPrincipalName + \' 管理?\', function(index){
-                          $.post("?a=invitation_code_deluserasadminbyid&account=' . $_SERVER['disktag'] . '",{id:obj.data.id},function(res){
-                           if (res.code == 1) {
-                              layer.closeAll();
-                              layui.use(\'table\', function(){
-                                  var table = layui.table;
-                                  table.reload(\'table\', { //表格的id
-                                      url:"?a=getusers&account=' . $_SERVER['disktag'] . '",
-                                  });
-                                 })
-                            }
-                            layer.msg(res.msg);
-                          },\'json\');
-                      });
-                  }
+                  
     
                   if(obj.event === \'accountinactive\'){
                       layer.confirm(\'禁止 \' + obj.data.userPrincipalName + \' 登录?\', function(index){
@@ -1828,6 +1918,52 @@ function render_list($drive = null)
                     },\'json\');
                 })
             });
+            $(\'#submitaddsubscribe\').click(function(){
+                /*if ($(\'#add_user\').val()=="") {
+                    layer.msg("输入用户名");
+                    return false;
+                }
+                if ($(\'#location\').val()=="") {
+                    layer.msg("选择地区");
+                    return false;
+                }*/
+                let skus = new Array();
+                //let rskus = new Array();
+                //$("input:checkbox[name=\'sku1\']").each(function(i){
+                //    rskus[i] = $(this).val();
+                //});
+                $("input:checkbox[name=\'sku1\']:checked").each(function(i){
+                    skus[i] = $(this).val();
+                    //rskus.splice(rskus.findIndex(item=>item==$(this).val()),1);
+                });
+                var data = {
+                    user_email:$(\'#user_email\').val(),
+                    assignedLicenses:$(\'#assignedLicenses\').val(),
+                    //location:$(\'#location\').val(),
+                    sku:skus,
+                    //del_sku:rskus
+                };
+                $.post("?a=add_subscribe&account=' . $_SERVER['disktag'] . '",data,function(res){
+                    console.log(res.code + res.msg);
+                    if (res.code == 0) {
+                        let r = JSON.parse(res.msg);
+                        layer.msg(r.msg);
+                        layer.closeAll();
+                        layui.use(\'table\', function(){
+                                var table = layui.table;
+                                table.reload(\'table\', { //表格的id
+                                    url:"?a=getusers&account=' . $_SERVER['disktag'] . '",
+                                });
+                            });
+                    } else {
+                        if (res.code > 1) alert(res.code + JSON.parse(res.msg).error.message);
+                        else {
+                            alert(res.code + JSON.parse(res.msg).msg);
+                        }
+                        layer.msg(res.msg);
+                    }
+                },\'json\');
+            })
         </script>
     </html>';
 
