@@ -595,7 +595,8 @@ function adminoperate()
                     $value[$k]['sku'] .= $skuId[$v1['skuId']];
                 } else {
                     if ($value[$k]['sku']!='') $value[$k]['sku'] .= '<br>';
-                    $value[$k]['sku'] .= '未知';
+                    //$value[$k]['sku'] .= '未知';
+                    $value[$k]['sku'] .= $v1['skuId'];
                 };
             }
         }
