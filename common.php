@@ -1762,7 +1762,7 @@ function render_list($drive = null)
                   if(obj.event === \'addsubscribe\'){
                     layer.open({
                         type: 1,
-                        title:\'分配订阅\',
+                        title:\'分配订阅（点过订阅后请刷新页面，订阅的勾选状态显示会有误）\',
                         end: function(){
                             $(\'#addsubscribe\').hide();
                           },
@@ -1781,14 +1781,22 @@ function render_list($drive = null)
                             layero.find(\'input[name=assignedLicenses]\').val(JSON.stringify(licenses));
                             //console.log(licenses);
                             $("input:checkbox[name=\'sku1\']").each(function(i){
-                                //console.log($(this));
                                 if (licenses.indexOf($(this).val())>-1) {
                                     $(this).attr("checked","checked");
+                                    if ($(this).attr("disabled")=="disabled") {
+                                        $(this).removeAttr("disabled");
+                                        $(this).attr("willdisabled","willdisabled");
+                                    }
+                                    //console.log($(this).attr("checked") + " " + $(this).val());
                                 } else {
                                     $(this).removeAttr("checked");
+                                    if ($(this).attr("willdisabled")=="willdisabled") {
+                                        $(this).attr("disabled","disabled");
+                                    }
                                 }
                             });
-                            form.render("checkbox");
+                            //form.render("checkbox");
+                            form.render();
                         }
                     });
                   }
