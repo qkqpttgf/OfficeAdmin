@@ -2,7 +2,7 @@
 
 class Onedrive {
     protected $access_token;
-    //protected $disktag;
+    protected $disktag;
 
     function __construct($tag) {
         $this->disktag = $tag;
@@ -511,7 +511,7 @@ class Onedrive {
                 //error_log1($this->oauth_url . 'token' . '?client_id=' . $this->client_id . '&client_secret=' . $this->client_secret . '&grant_type=refresh_token&requested_token_use=on_behalf_of&refresh_token=' . substr($refresh_token, 0, 20) . '******' . substr($refresh_token, -20));
                 error_log1('failed to get [' . $this->disktag . '] access_token. response: ' . $response['body']);
                 $response['body'] = json_encode(json_decode($response['body']), JSON_PRETTY_PRINT);
-                $response['body'] .= "\n" . 'failed to get [' . $this->disktag . '] access_token.';
+                $response['body'] .= "<br>\n" . $url . "<br>\n" . $data . "<br>\n" . 'failed to get [' . $this->disktag . '] access_token.';
                 $this->error = $response;
                 return false;
             }
@@ -543,7 +543,7 @@ class Onedrive {
                 error_log1($this->oauth_url . 'token' . '?client_id=' . $this->client_id . '&client_secret=' . $this->client_secret . '&grant_type=refresh_token&requested_token_use=on_behalf_of&refresh_token=' . substr($refresh_token, 0, 20) . '******' . substr($refresh_token, -20));
                 error_log1('failed to get [' . $this->disktag . '] access_token. response: ' . $response['body']);
                 $response['body'] = json_encode(json_decode($response['body']), JSON_PRETTY_PRINT);
-                $response['body'] .= '\nfailed to get [' . $this->disktag . '] access_token.';
+                $response['body'] .= "<br>\n" . 'failed to get [' . $this->disktag . '] access_token.';
                 $this->error = $response;
                 return false;
                 //throw new Exception($response['stat'].', failed to get ['.$this->disktag.'] access_token.'.$response['body']);
