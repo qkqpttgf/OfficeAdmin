@@ -97,17 +97,29 @@ class Onedrive {
         ];
         return $this->MSAPI('POST', $url, json_encode($data));
     }
-    public function addsubscribes ($user_email, $sku_ids){
+    public function addsubscribes ($user_email, $sku_ids, $del_skus = []){
+        //error_log1('sku_ids: ' . json_encode($sku_ids));
         $url = '/v1.0/users/' . $user_email . '/assignLicense';
-        $data['removeLicenses'] = [];
-        $i = 0;
-        foreach ($sku_ids as $sku_id) {
-            $data['addLicenses'][$i] = [
-                'disabledPlans' => [],
-                'skuId' => $sku_id
-            ];
-            $i++;
-        }
+        if ($del_skus) {
+            //error_log1('del_skus: ' . $del_skus . ' : ' . json_encode($del_skus));
+            $i = 0;
+            foreach ($del_skus as $del_sku) {
+                $data['removeLicenses'][$i] = $del_sku;
+                $i++;
+            }
+        } else $data['removeLicenses'] = [];
+        if ($sku_ids) {
+            $i = 0;
+            foreach ($sku_ids as $sku_id) {
+                $data['addLicenses'][$i] = [
+                    'disabledPlans' => [],
+                    'skuId' => $sku_id
+                ];
+                $i++;
+            }
+        } else $data['addLicenses'] = [];
+        
+        //error_log1('in: ' . json_encode($data));
         return $this->MSAPI('POST', $url, json_encode($data));
     }
     public function accountdelete ($user_email){
