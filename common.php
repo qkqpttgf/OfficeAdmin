@@ -579,7 +579,7 @@ function adminoperate()
     if($_GET['a'] == 'getusers'){
         $data = $drive->getusers();
         if ($data['stat']!=200) return output(response(1,"Error",json_encode($data)));
-
+        $globalAdmins = $drive->getGlobalAdmins();
         $skuId = null;
         foreach ($license as $k => $v) {
             $skuId[$v['skuid']] = $v['name'];
@@ -599,6 +599,8 @@ function adminoperate()
                     $value[$k]['sku'] .= $v1['skuId'];
                 };
             }
+            if (isset($globalAdmins[$v['userPrincipalName']])) $value[$k]['isGlobalAdmin'] = true;
+            else $value[$k]['isGlobalAdmin'] = false;
         }
         return output(response(0,"获取成员信息成功",$value,count($value)));
     }
@@ -1564,15 +1566,20 @@ function render_list($drive = null)
             </div>';
                     }
                     $html .= '
-    
         </body>
-        
+
         <script type="text/html" id="buttons">
-          <a class="layui-btn layui-btn-normal layui-btn-xs" lay-event="accountactive">允许</a>
-          <a class="layui-btn layui-btn-warm layui-btn-xs" lay-event="accountinactive">禁止</a>
-          <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="setuserasadminbyid">设为管理</a>
-          <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="deluserasadminbyid">取消管理</a>
-          <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+            {{# if(d.accountEnabled!=true){}}
+            <a class="layui-btn layui-btn layui-btn-xs" lay-event="accountactive">允许</a>
+            {{# } else { }}
+            <a class="layui-btn layui-btn-warm layui-btn-xs" lay-event="accountinactive">禁止</a>
+            {{# } }}
+            {{# if(d.isGlobalAdmin!=true){}}
+            <a class="layui-btn layui-btn-warm layui-btn-xs" lay-event="setuserasadminbyid">设为管理</a>
+            {{# } else { }}
+            <a class="layui-btn layui-btn-normal layui-btn-xs" lay-event="deluserasadminbyid">取消管理</a>
+            {{# } }}
+            <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
         </script>
         <script src="./layui/layui.js" charset="utf-8"></script>
         <script src="./layui/jquery.js"></script>
@@ -1618,6 +1625,13 @@ function render_list($drive = null)
                                   return \'-\';
                               }
                       }},*/
+                      /*{field:\'isGlobalAdmin\',title: \'isGlobalAdmin\',align: \'center\',templet:function(d){
+                        if(d.isGlobalAdmin){
+                            return d.isGlobalAdmin;
+                        }else{
+                            return \'-\';
+                        }
+                }},*/
                       {field:\'createdDateTime\', title: \'创建时间\',align: \'center\'},
                       {field:\'sku\', title: \'许可证\',align: \'center\',templet:function(d){
                               if(d.sku == \'无许可\'){
