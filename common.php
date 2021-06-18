@@ -454,7 +454,7 @@ function needUpdate()
     $current_ver = explode(urldecode('%0D'),$current_ver)[0];
     $split = splitfirst($current_version, '.' . $current_ver)[0] . '.' . $current_ver;
     if (!($github_version = getcache('github_version'))) {
-        $tmp = curl('GET', 'https://raw.githubusercontent.com/qkqpttgf/OfficeAdmin/master/version');
+        $tmp = curl('GET', 'https://raw.githubusercontent.com/qkqpttgf/OfficeAdmin/main/version');
         if ($tmp['stat']==0) return 0;
         $github_version = $tmp['body'];
         savecache('github_version', $github_version);
@@ -1216,7 +1216,7 @@ function EnvOpt($needUpdate = 0)
     <input type="text" name="project" size="12" placeholder="project" value="OfficeAdmin">
     <button name="QueryBranchs" onclick="querybranchs();return false;">' . getconstStr('QueryBranchs') . '</button>
     <select name="branch">
-        <option value="master">master</option>
+        <option value="main">main</option>
     </select>
     <input type="submit" name="updateProgram" value="' . getconstStr('updateProgram') . '">
 </form>
@@ -1232,7 +1232,7 @@ function EnvOpt($needUpdate = 0)
                 document.updateform.branch.options.length=0;
                 JSON.parse(xhr.responseText).forEach( function (e) {
                     document.updateform.branch.options.add(new Option(e.name,e.name));
-                    if ("master"==e.name) document.updateform.branch.options[document.updateform.branch.options.length-1].selected = true; 
+                    if ("main"==e.name) document.updateform.branch.options[document.updateform.branch.options.length-1].selected = true; 
                 });
                 document.updateform.QueryBranchs.style.display="none";
             } else {
