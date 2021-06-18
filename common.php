@@ -140,7 +140,7 @@ function main($path)
     //}
     if ( isset($_COOKIE['admin'])&&compareadminmd5($_COOKIE['admin'], 'admin', getConfig('admin')) ) {
         $_SERVER['admin']=1;
-        //$_SERVER['needUpdate'] = needUpdate();
+        $_SERVER['needUpdate'] = needUpdate();
     } else {
         $_SERVER['admin']=0;
     }
