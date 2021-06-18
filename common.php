@@ -213,10 +213,9 @@ function main($path)
 function driveisfine(&$drive, $tag = '')
 {
     global $slash;
-    //$disktype = getConfig('Driver', $tag);
-    //if (!$disktype) return false;
+    $disktype = getConfig('Driver', $tag);
+    if (!$disktype) return false;
     if (!$drive) {
-        $disktype = 'Onedrive';
         if (!class_exists($disktype)) require 'disk' . $slash . $disktype . '.php';
         $drive = new $disktype($tag);
     }// else return false;
@@ -1460,7 +1459,7 @@ function render_list($drive = null)
             <table class="layui-hide" id="table" lay-filter="table">
             </table>';
             } else {
-                $html .= 'Something Error';
+                $html .= 'Something Error<br>' . $drive->error['stat'] . '<br>' . $drive->error['body'];
             }
             if ($driveok) {
                 $html .= '
@@ -1508,26 +1507,31 @@ function render_list($drive = null)
               </div>
               
               <div class="layui-form-item">
-                <label class="layui-form-label">国家(地区)</label>
+                <label class="layui-form-label">国家(地区) *</label>
                 <div class="layui-input-inline">
                   <select name="location" required lay-verify="required" id="location">';
-                  $locations = [//自己配置，写了几个常用的
-                    '中国'=>'CN',
-                    '台湾'=>'TW',
-                    '香港'=>'HK',
-                    '日本'=>'JP',
-                    '美国'=>'US',
-                    '新加坡'=>'SG',
-                    '英国'=>'GB'
+                  $locations = [
+                    'CN' => '中国',
+                    'HK' => '香港',
+                    'US' => '美国',
+                    'SG' => '新加坡',
+                    'TW' => '台湾',
+                    'JP' => '日本',
+                    'GB' => '英国'
                   ];
+                  $defaultCountry = getConfig('defaultCountry', $_SERVER['disktag']);
+                        if (!isset($locations[$defaultCountry])) $html .= '
+                        <option value="' . $defaultCountry . '">' . $defaultCountry . '</option>';
+                        else $html .= '
+                        <option value="' . $defaultCountry . '">' . $locations[$defaultCountry] . '</option>';
                         foreach ($locations as $key => $value) {
-                            $html .= '
-                           <option value="' . $value . '">' . $key . '</option>';
+                            if ($key!=$defaultCountry) $html .= '
+                           <option value="' . $key . '">' . $value . '</option>';
                         }
                         $html .= '
                   </select>
                 </div>
-                <div class="layui-form-mid layui-word-aux">建议用全局默认区域：(' . getConfig('defaultCountry', $_SERVER['disktag']) . ')</div>
+                <div class="layui-form-mid layui-word-aux">建议用全局默认区域：(' . $defaultCountry . ')</div>
               </div>
               <div class="layui-form-item">
                 <label class="layui-form-label">许可证</label>
@@ -1749,6 +1753,10 @@ function render_list($drive = null)
                 $(\'#submitaccount\').click(function(){
                     if ($(\'#add_user\').val()=="") {
                         layer.msg("输入用户名");
+                        return false;
+                    }
+                    if ($(\'#location\').val()=="") {
+                        layer.msg("选择地区");
                         return false;
                     }
                     let skus = new Array();
