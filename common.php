@@ -1500,22 +1500,21 @@ function render_list($drive = null)
     if ($driveok) {
         $html .= '
         <div id="add_account_content" class="layui-form layui-form-pane" style="display: none;margin:1rem 3rem;">
-            <form class="layui-form" >
+            <form class="layui-form">
                 <div class="layui-form-item">
                     <label class="layui-form-label">姓/Lastname</label>
                     <div class="layui-input-inline">
-                        <input type="text" placeholder="英文/拼音" class="layui-input" id="lastname" pattern="[A-z0-9]{1,50}">
+                        <input type="text" class="layui-input" id="lastname" pattern="[A-z0-9]{1,50}">
                     </div>
                     <label class="layui-form-label">名/Firstname</label>
                     <div class="layui-input-inline">
-                        <input type="text" placeholder="英文/拼音" class="layui-input" id="firstname" pattern="[A-z0-9]{1,50}">
+                        <input type="text" class="layui-input" id="firstname" pattern="[A-z0-9]{1,50}">
                     </div>
                 </div>
-
                 <div class="layui-form-item">
                     <label class="layui-form-label">用户账号 *</label>
                     <div class="layui-input-inline">
-                        <input type="text" placeholder="请输入前缀" class="layui-input" id="add_user" pattern="[A-z0-9]{1,50}" required lay-verify="required">
+                        <input type="text" placeholder="请输入英文" class="layui-input" id="add_user" pattern="[A-z0-9]{1,50}" required lay-verify="required">
                     </div>
                     <div class="layui-input-inline">
                         <select name="domain" required lay-verify="required" id="domain">';
@@ -1536,13 +1535,12 @@ function render_list($drive = null)
                 <div class="layui-form-item">
                     <label class="layui-form-label">密码</label>
                     <div class="layui-input-inline">
-                        <input type="password" placeholder="请输入密码" class="layui-input" id="password" pattern="[A-z0-9]{8,50}">
+                        <input type="password" placeholder="留空可自动生成" class="layui-input" id="password" pattern="[A-z0-9]{8,50}">
                     </div>
                     <div class="layui-input-inline">
                         <input type="checkbox" name="forceChangePassword" id="forceChangePassword" lay-skin="switch" lay-text="首登强制重设密码|首登无需重设密码">
                     </div>
                 </div>
-              
                 <div class="layui-form-item">
                     <label class="layui-form-label">国家(地区) *</label>
                     <div class="layui-input-inline">
@@ -1600,17 +1598,9 @@ function render_list($drive = null)
         </div>';
         $html .= '
         <div id="addsubscribe" class="layui-form layui-form-pane" style="display: none;margin:1rem 3rem;">
-            <form class="layui-form" >
-                <div class="layui-form-item">
-                    <div class="layui-input-inline">
-                        <input type="hidden" class="layui-input" id="user_email" name="user_email" pattern="[A-z0-9]{1,50}" required lay-verify="required">
-                    </div>
-                </div>
-                <div class="layui-form-item">
-                    <div class="layui-input-inline">
-                        <input type="hidden" class="layui-input" id="assignedLicenses" name="assignedLicenses" required lay-verify="required">
-                    </div>
-                </div>
+            <form class="layui-form">
+                <input type="hidden" class="layui-input" id="user_email" name="user_email" required lay-verify="required">
+                <input type="hidden" class="layui-input" id="assignedLicenses" name="assignedLicenses" required lay-verify="required">
                 <div class="layui-form-item">
                     <label class="layui-form-label">许可证</label>
                     <div class="layui-input-inline">';
@@ -1777,7 +1767,7 @@ function render_list($drive = null)
                 if(obj.event === \'addsubscribe\'){
                     layer.open({
                         type: 1,
-                        title:\'分配订阅（点过订阅后请刷新页面，订阅的勾选状态显示会有误）\',
+                        title:\'分配订阅\',
                         end: function(){
                             $(\'#addsubscribe\').hide();
                         },
@@ -1796,28 +1786,27 @@ function render_list($drive = null)
                             layero.find(\'input[name=assignedLicenses]\').val(JSON.stringify(licenses));
                             //console.log(licenses);
                             //form.on("checkbox(subscribe_sku)", function(data){
-                            //    console.log(data.elem.value);
+                            //    console.log(data.elem.checked);
                             //});
-                            $("input:checkbox[name=\'sku1\']").each(function(i){
+                            layero.find(\'input[name="sku1"]\').each(function(i){
+                            //$("input:checkbox[name=\'sku1\']").each(function(i){
                                 //console.log($(this).attr("checked") + " " + $(this).val());
                                 if (licenses.indexOf($(this).val())>-1) {
-                                    $(this).attr("checked",true);
+                                    $(this).prop("checked",true);
                                     if ($(this).attr("disabled")=="disabled") {
                                         $(this).removeAttr("disabled");
                                         $(this).attr("willdisabled","willdisabled");
                                     }
-                                    //console.log($(this).attr("checked") + " " + $(this).val());
                                 } else {
-                                    $(this).attr("checked",false);
-                                    //$(this).removeAttr("checked");
+                                    $(this).prop("checked",false);
                                     if ($(this).attr("willdisabled")=="willdisabled") {
                                         $(this).attr("disabled","disabled");
                                     }
                                 }
                                 //console.log($(this).attr("checked"));
                             });
-                            //form.render("checkbox");
-                            form.render();
+                            form.render("checkbox");
+                            //form.render();
                         }
                     });
                 }
@@ -1838,37 +1827,6 @@ function render_list($drive = null)
                         },\'json\');
                     });
                 }
-            });';
-    $html .= '
-            form.on(\'select(account)\', function (data) {
-                    //获取当前选中下拉项的索引
-                    //let indexGID = data.elem.selectedIndex;
-                    //获取当前选中下拉项的自定义属性值 title
-                    //let goodsName = data.elem[indexGID].title;
-                    //获取当前选中下拉项的 value值
-                    //let goodsID = data.value;
-                layer.confirm(\'确认切换 \' + data.elem[data.elem.selectedIndex].text + \' 全局?\', function(index){
-                    var account = $(\'#account\').val();
-                    location.href = "?account=" + account;
-                });
-            });
-                /*$(\'#change_account\').click(function(){
-                    layer.confirm(\'确认切换全局?\', function(index){
-                        var account = $(\'#account\').val();
-                        location.href = "?account=" + account;
-                    });
-                });*/
-            $(\'#logout\').click(function(){
-                layer.confirm(\'确认注销登录?\', function(index){
-                    var expd = new Date();
-                    expd.setTime(expd.getTime()+1000);
-                    var expires = "expires="+expd.toGMTString();
-                    document.cookie = "admin=; path=/; "+expires;
-                    window.location.reload();
-                });
-            });
-            $(\'#setup\').click(function(){
-                location.href = "?setup";
             });
             $(\'#add_account\').click(function(){
                 layer.open({
@@ -1987,7 +1945,38 @@ function render_list($drive = null)
                         layer.msg(res.msg);
                     }
                 },\'json\');
-            })
+            })';
+    $html .= '
+            form.on(\'select(account)\', function (data) {
+                    //获取当前选中下拉项的索引
+                    //let indexGID = data.elem.selectedIndex;
+                    //获取当前选中下拉项的自定义属性值 title
+                    //let goodsName = data.elem[indexGID].title;
+                    //获取当前选中下拉项的 value值
+                    //let goodsID = data.value;
+                layer.confirm(\'确认切换 \' + data.elem[data.elem.selectedIndex].text + \' 全局?\', function(index){
+                    var account = $(\'#account\').val();
+                    location.href = "?account=" + account;
+                });
+            });
+                /*$(\'#change_account\').click(function(){
+                    layer.confirm(\'确认切换全局?\', function(index){
+                        var account = $(\'#account\').val();
+                        location.href = "?account=" + account;
+                    });
+                });*/
+            $(\'#logout\').click(function(){
+                layer.confirm(\'确认注销登录?\', function(index){
+                    var expd = new Date();
+                    expd.setTime(expd.getTime()+1000);
+                    var expires = "expires="+expd.toGMTString();
+                    document.cookie = "admin=; path=/; "+expires;
+                    window.location.reload();
+                });
+            });
+            $(\'#setup\').click(function(){
+                location.href = "?setup";
+            });
         });
     </script>
 </html>';
