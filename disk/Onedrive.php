@@ -207,6 +207,7 @@ class Onedrive {
 
                 //$this->disktag = $_POST['disktag_add'];
                 $tmp['disktag_add'] = $_POST['disktag_add'];
+                $tmp['Driver'] = get_class($this);
                 $tmp['diskname'] = $_POST['diskname'];
                 $tmp['tenant_id'] = $_POST['tenant_id'];
                 $tmp['client_id'] = $_POST['client_id'];
