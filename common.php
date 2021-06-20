@@ -1442,7 +1442,7 @@ function render_list($drive = null)
         <meta http-equiv="content-type" content="text/html; charset=utf-8" />
         <meta name=viewport content="width=device-width,initial-scale=1">
         <title>Microsoft Office365 全局管理</title>
-        <link rel="stylesheet" href="layui/css/layui.css">
+        <link rel="stylesheet" href="//unpkg.com/layui@2.6.8/dist/css/layui.css">
         <link href="files/mslogo.png" rel="icon" type="image/png">
         <style type="text/css">
             .layui-table-cell {
@@ -1642,8 +1642,8 @@ function render_list($drive = null)
         <a class="layui-btn layui-btn-primary layui-btn-xs" lay-event="addsubscribe">分配订阅</a>
         <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
     </script>
-    <script src="./layui/layui.js" charset="utf-8"></script>
-    <script src="./layui/jquery.js"></script>
+    <script src="//unpkg.com/layui@2.6.8/dist/layui.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.6.0/jquery.js"></script>
     <script type="text/javascript" charset="utf-8">
         layui.use([\'table\',\'form\',\'layer\'], function(){
             var table = layui.table;
@@ -1654,7 +1654,7 @@ function render_list($drive = null)
                 elem: \'#table\',//表格id
                 url:"?a=getusers&account=' . $_SERVER['disktag'] . '",//list接口地址
                 cellMinWidth: 60,//全局定义常规单元格的最小宽度
-                height: \'full-120\',
+                height: \'full-100\',
                 loading: true,
                 cols: [[
                     //align属性是文字在列表中的位置 可选参数left center right
@@ -1701,7 +1701,7 @@ function render_list($drive = null)
                             return d.sku;
                         }
                     }},
-                    {/*fixed:\'right\',*/title: \'操作\', width: 335, align:\'center\', toolbar: \'#buttons\'}
+                    {/*fixed:\'right\',*/title: \'操作\', width: 280, align:\'center\', toolbar: \'#buttons\'}
                 ]]
             });
                //监听
