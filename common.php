@@ -663,10 +663,24 @@ function adminoperate()
                 $del_sku[$k] = $v['skuId'];
             }
         }*/
-        $del_sku = json_decode($_POST['assignedLicenses'], true);
-        foreach ($_POST['sku'] as $k => $v) {
-            if (in_array($v, $del_sku)) array_diff($del_sku, [ $v ]);
+        $tmp = json_decode($_POST['assignedLicenses'], true);
+        foreach ($tmp as $k => $v) {
+            //error_log1(( $k . '_' . $v));
+            $tmp1[$v] = $k;
         }
+        foreach ($_POST['sku'] as $k => $v) {
+            //if (in_array($v, $del_sku)) 
+            //array_diff($del_sku, $_POST['sku']);
+            unset($tmp1[$v]);
+        }
+        $i = 0;
+        foreach ($tmp1 as $k => $v) {
+            //error_log1(( $k . '_' . $v));
+            $del_sku[$i] = $k;
+            $i++;
+        }
+        //error_log1('Add: ' . json_encode($_POST['sku']));
+        //error_log1('Del: ' . json_encode($del_sku));
         //if (!!$_POST['sku']) {
             $result = $drive->addsubscribes ($_POST['user_email'], $_POST['sku'], $del_sku);
             //error_log1('Addlin' . json_encode($result));
