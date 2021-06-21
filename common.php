@@ -1600,6 +1600,7 @@ function render_list($drive = null)
         <div id="addsubscribe" class="layui-form layui-form-pane" style="display: none;margin:1rem 3rem;">
             <form class="layui-form">
                 <input type="hidden" class="layui-input" id="user_email" name="user_email" required lay-verify="required">
+                <input type="hidden" class="layui-input" id="usageLocation" name="usageLocation" required lay-verify="required">
                 <input type="hidden" class="layui-input" id="assignedLicenses" name="assignedLicenses" required lay-verify="required">
                 <div class="layui-form-item">
                     <label class="layui-form-label">许可证</label>
@@ -1627,19 +1628,18 @@ function render_list($drive = null)
     }
     $html .= '
     </body>
-
+    <!--<a class="layui-btn layui-btn-primary layui-btn-xs" lay-event="addsubscribe">分配订阅</a>-->
     <script type="text/html" id="buttons">
 {{# if(d.accountEnabled!=true){}}
-        <a class="layui-btn layui-btn layui-btn-xs" lay-event="accountactive">允许</a>
+        <a class="layui-btn layui-btn layui-btn-xs" lay-event="accountactive">允许登录</a>
 {{# } else { }}
-        <a class="layui-btn layui-btn-warm layui-btn-xs" lay-event="accountinactive">禁止</a>
+        <a class="layui-btn layui-btn-warm layui-btn-xs" lay-event="accountinactive">禁止登录</a>
 {{# } }}
 {{# if(d.isGlobalAdmin!=true){}}
         <a class="layui-btn layui-btn-warm layui-btn-xs" lay-event="setuserasadminbyid">设为管理</a>
 {{# } else { }}
         <a class="layui-btn layui-btn-normal layui-btn-xs" lay-event="deluserasadminbyid">取消管理</a>
 {{# } }}
-        <a class="layui-btn layui-btn-primary layui-btn-xs" lay-event="addsubscribe">分配订阅</a>
         <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
     </script>
     <script src="//unpkg.com/layui@2.6.8/dist/layui.js"></script>
@@ -1662,46 +1662,54 @@ function render_list($drive = null)
                     //title是这列的标题
                     //field是取接口的字段值
                     //width是宽度，不填则自动根据值的长度
-                    {field:\'displayName\', title: \'displayName\',align: \'center\'},
-                    {field:\'userPrincipalName\',title: \'账号\',align: \'center\',templet:function(d){
-                        if(d.userPrincipalName){
+                    {field:\'displayName\', title: \'displayName\', align: \'center\'},
+                    {field:\'userPrincipalName\', title: \'账号\', align: \'center\', templet: function(d){
+                        /*if(d.userPrincipalName){
                             return d.userPrincipalName;
                         }else{
                             return \'-\';
-                        }
-                    }},
-                    {field:\'accountEnabled\', title: \'账户状态\',align: \'center\',templet:function(d){
+                        }*/
                         if(d.accountEnabled == true){
-                            return \'<span style="color:#99CC00">正常</span>\';
+                            return d.userPrincipalName;
                         }else{
-                            return \'<span style="color:red;">禁用</span>\';
+                            return \'<a lay-event="accountactive"><span style="color:red;">\' + d.userPrincipalName + \'</span></a>\';
                         }
                     }},
-                    {field:\'usageLocation\',title: \'usageLocation\',align: \'center\'},
-    
-                    /*{field:\'id\',title: \'id\',align: \'center\',templet:function(d){
+                    /*{field:\'id\', title: \'id\', align: \'center\', templet: function(d){
                         if(d.id){
                             return d.id;
                         }else{
                             return \'-\';
                         }
                     }},*/
-                    /*{field:\'isGlobalAdmin\',title: \'isGlobalAdmin\',align: \'center\',templet:function(d){
+                    /*{field:\'accountEnabled\', title: \'账户状态\', align: \'center\', templet: function(d){
+                        if(d.accountEnabled == true){
+                            return \'<span style="color:#99CC00">正常</span>\';
+                        }else{
+                            return \'<span style="color:red;">禁用</span>\';
+                        }
+                    }},*/
+                    {field:\'usageLocation\', title: \'地区\', align: \'center\'},
+                    {field:\'sku\', title: \'许可证\', align: \'center\', templet: function(d){
+                        let s = \'<a lay-event="addsubscribe">\';
+                        //class="layui-btn layui-btn-primary layui-btn-xs"
+                        if(d.sku == \'无许可\'){
+                            s += \'<span style="color:#ff461f">无许可</span>\';
+                        }else{
+                            s += d.sku;
+                        }
+                        s += \'</a>\';
+                        return s;
+                    }},
+                    /*{field:\'isGlobalAdmin\', title: \'isGlobalAdmin\', align: \'center\',  templet:function(d){
                         if(d.isGlobalAdmin){
                             return d.isGlobalAdmin;
                         }else{
                             return \'-\';
                         }
                     }},*/
-                    {field:\'createdDateTime\', title: \'创建时间\',align: \'center\'},
-                    {field:\'sku\', title: \'许可证\',align: \'center\',templet:function(d){
-                        if(d.sku == \'无许可\'){
-                            return \'<span style="color:#ff461f">无许可</span>\';
-                        }else{
-                            return d.sku;
-                        }
-                    }},
-                    {/*fixed:\'right\',*/title: \'操作\', width: 280, align:\'center\', toolbar: \'#buttons\'}
+                    {field:\'createdDateTime\', title: \'创建时间\', align: \'center\'},
+                    {/*fixed:\'right\',*/title: \'操作\', /*width: 280,*/width: 220, align:\'center\', toolbar: \'#buttons\'}
                 ]]
             });
                //监听
@@ -1719,7 +1727,23 @@ function render_list($drive = null)
                 if(obj.event === \'accountactive\'){
                     layer.confirm(\'允许 \' + obj.data.userPrincipalName + \' 登录?\', function(index){
                         $.post("?a=invitation_code_activeaccount&account=' . $_SERVER['disktag'] . '",{email:obj.data.userPrincipalName},function(res){
-                            if (res.code == 1) {
+                            if (res.code == 0) {
+                                layer.closeAll();
+                                layui.use(\'table\', function(){
+                                    var table = layui.table;
+                                    table.reload(\'table\', { //表格的id
+                                        url:"?a=getusers&account=' . $_SERVER['disktag'] . '",
+                                    });
+                                })
+                            }
+                            layer.msg(res.msg);
+                        },\'json\');
+                    });
+                }
+                if(obj.event === \'accountinactive\'){
+                    layer.confirm(\'禁止 \' + obj.data.userPrincipalName + \' 登录?\', function(index){
+                        $.post("?a=invitation_code_inactiveaccount&account=' . $_SERVER['disktag'] . '",{email:obj.data.userPrincipalName},function(res){
+                            if (res.code == 0) {
                                 layer.closeAll();
                                 layui.use(\'table\', function(){
                                     var table = layui.table;
@@ -1735,7 +1759,7 @@ function render_list($drive = null)
                 if(obj.event === \'setuserasadminbyid\'){
                     layer.confirm(\'设 \' + obj.data.userPrincipalName + \' 为管理?\', function(index){
                         $.post("?a=invitation_code_setuserasadminbyid&account=' . $_SERVER['disktag'] . '",{id:obj.data.id},function(res){
-                            if (res.code == 1) {
+                            if (res.code == 0) {
                                 layer.closeAll();
                                 layui.use(\'table\', function(){
                                     var table = layui.table;
@@ -1751,7 +1775,7 @@ function render_list($drive = null)
                 if(obj.event === \'deluserasadminbyid\'){
                     layer.confirm(\'取消 \' + obj.data.userPrincipalName + \' 管理?\', function(index){
                         $.post("?a=invitation_code_deluserasadminbyid&account=' . $_SERVER['disktag'] . '",{id:obj.data.id},function(res){
-                            if (res.code == 1) {
+                            if (res.code == 0) {
                                 layer.closeAll();
                                 layui.use(\'table\', function(){
                                     var table = layui.table;
@@ -1776,6 +1800,7 @@ function render_list($drive = null)
                         content: $(\'#addsubscribe\'),
                         success: function(layero, index) {
                             layero.find(\'input[name=user_email]\').val(obj.data.userPrincipalName);
+                            layero.find(\'input[name=usageLocation]\').val(obj.data.usageLocation);
                             let licenses = new Array();
                             let i = 0;
                             obj.data.assignedLicenses.forEach(function(d){
@@ -1808,23 +1833,6 @@ function render_list($drive = null)
                             form.render("checkbox");
                             //form.render();
                         }
-                    });
-                }
-
-                if(obj.event === \'accountinactive\'){
-                    layer.confirm(\'禁止 \' + obj.data.userPrincipalName + \' 登录?\', function(index){
-                        $.post("?a=invitation_code_inactiveaccount&account=' . $_SERVER['disktag'] . '",{email:obj.data.userPrincipalName},function(res){
-                            if (res.code == 1) {
-                                layer.closeAll();
-                                layui.use(\'table\', function(){
-                                    var table = layui.table;
-                                    table.reload(\'table\', { //表格的id
-                                        url:"?a=getusers&account=' . $_SERVER['disktag'] . '",
-                                    });
-                                })
-                            }
-                            layer.msg(res.msg);
-                        },\'json\');
                     });
                 }
             });
@@ -1909,11 +1917,12 @@ function render_list($drive = null)
                 /*if ($(\'#add_user\').val()=="") {
                     layer.msg("输入用户名");
                     return false;
-                }
-                if ($(\'#location\').val()=="") {
-                    layer.msg("选择地区");
-                    return false;
                 }*/
+                if ($(\'#usageLocation\').val()=="") {
+                    layer.closeAll();
+                    layer.msg("帐号无地区无法分配");
+                    return false;
+                }
                 let skus = new Array();
                 $("input:checkbox[name=\'sku1\']:checked").each(function(i){
                     skus[i] = $(this).val();
@@ -1921,7 +1930,7 @@ function render_list($drive = null)
                 var data = {
                     user_email:$(\'#user_email\').val(),
                     assignedLicenses:$(\'#assignedLicenses\').val(),
-                    //location:$(\'#location\').val(),
+                    //usageLocation:$(\'#usageLocation\').val(),
                     sku:skus,
                 };
                 //console.log(data);
