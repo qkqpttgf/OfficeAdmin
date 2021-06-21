@@ -1453,10 +1453,16 @@ function render_list($drive = null)
     </head>
     <body class="layui-layout-body" style="overflow-y:visible;background: #fff;">
         <div class="layui-form">
-            <blockquote class="layui-elem-quote quoteBox">
-                <div class="layui-inline" style="margin-left: 2rem;">';
+            <blockquote class="layui-elem-quote quoteBox">';
+    if ($driveok) {
+        $html .= '
+                <div class="layui-inline" style="margin-left: 2rem;">
+                    <a class="layui-btn" id="add_account"><i class="layui-icon layui-icon-username"></i> 新建用户</a>
+                </div>';
+    }
     if ($disktags) {
         $html .= '
+                <div class="layui-inline" style="margin-left: 2rem;">
                     <select name="account" id="account" lay-filter="account">
                         <option value="">Account Select</option>';
         foreach ($disktags as $disktag) {
@@ -1472,12 +1478,6 @@ function render_list($drive = null)
                 <!--<div class="layui-inline" style="margin-left: 2rem;">  
                     <a class="layui-btn" id="change_account"><i class="layui-icon layui-icon-template-1"></i> 切换全局</a>
                 </div>-->';
-    }
-    if ($driveok) {
-        $html .= '
-                <div class="layui-inline" style="margin-left: 2rem;">
-                    <a class="layui-btn" id="add_account"><i class="layui-icon layui-icon-username"></i> 新建用户</a>
-                </div>';
     }
     $html .= '
                 <div class="layui-inline" style="margin-left: 2rem;">
@@ -1495,7 +1495,7 @@ function render_list($drive = null)
         <table class="layui-hide" id="table" lay-filter="table">
         </table>';
     } else {
-        $html .= 'Something Error<br>' . $drive->error['stat'] . '<br>' . $drive->error['body'];
+        $html .= 'Something Error<br>' . $drive->error['stat'] . '<br>' . $drive->error['body'] . '<br>.';
     }
     if ($driveok) {
         $html .= '
