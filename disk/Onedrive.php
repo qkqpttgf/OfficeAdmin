@@ -48,7 +48,7 @@ class Onedrive {
     }
 
     public function getusers() {
-        $url='/beta/users/?$select=displayName,accountEnabled,usageLocation,id,userPrincipalName,createdDateTime,assignedLicenses';
+        $url='/v1.0/users/?$select=displayName,accountEnabled,usageLocation,id,userPrincipalName,createdDateTime,assignedLicenses';
         return $this->MSAPI('GET', $url);
     }
     public function getGlobalAdmins() {
@@ -123,16 +123,16 @@ class Onedrive {
         return $this->MSAPI('POST', $url, json_encode($data));
     }
     public function accountdelete ($user_email){
-        $url="/beta/users/" . $user_email;
+        $url="/v1.0/users/" . $user_email;
         return $this->MSAPI('DELETE', $url);
     }
     public function accountactive($user_email){
-        $url="/beta/users/" . $user_email;
+        $url="/v1.0/users/" . $user_email;
         $jsdata='{"accountEnabled":"true"}';
         return $this->MSAPI('PATCH', $url, $jsdata);
     }
     public function accountinactive($user_email) {
-        $url="/beta/users/" . $user_email;
+        $url="/v1.0/users/" . $user_email;
         $jsdata='{"accountEnabled":"false"}';
         return $this->MSAPI('PATCH', $url, $jsdata);
     }
