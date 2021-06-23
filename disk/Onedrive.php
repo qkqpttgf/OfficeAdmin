@@ -47,9 +47,119 @@ class Onedrive {
         return [ 'tenant_id', 'client_id', 'client_secret' ];
     }
 
-    public function getusers() {
-        $url='/v1.0/users/?$select=displayName,accountEnabled,usageLocation,id,userPrincipalName,createdDateTime,assignedLicenses';
-        return $this->MSAPI('GET', $url);
+    public function getuserscounts() {
+        $url='/v1.0/users/$count';
+        $h['ConsistencyLevel'] = 'eventual';
+        $result = $this->MSAPI('GET', $url, '', $h);
+        return $result['body'];
+    }
+    private function getusersStartEnd($start = 0) {
+        //error_log1('start=' . $start . ' end=' . $end);
+        $pagesize = 900;
+        if ($start<$pagesize) {
+            $url='/v1.0/users/?$top=' . $pagesize . '&$select=displayName,accountEnabled,usageLocation,id,userPrincipalName,createdDateTime,assignedLicenses';
+            $result = $this->MSAPI('GET', $url);
+            //if ($result['stat']!=200) 
+            return $result;
+            //$data = json_decode($result['body'], true);
+        } else {
+            $page = intval($start / $pagesize);
+            if (!($link = getcache('limit_' . $pagesize . '_page_' . ($page-1) . '_nextlink', $this->disktag))) {
+                $result = $this->getusersStartEnd(($page-1)*$pagesize);
+                $link = json_decode($result['body'], true)['@odata.nextLink'];
+            }
+            //error_log1('link=' . $link);
+            $result = $this->MSAPI('GET', $link);
+            if ($result['stat']!=200) return $result;
+            $data = json_decode($result['body'], true);
+            if (isset($data['@odata.nextLink'])) savecache('limit_' . $pagesize . '_page_' . $page . '_nextlink', $data['@odata.nextLink'], $this->disktag);
+            $j = 0;
+            $s1 = $start-$page*$pagesize;
+            //error_log1('start=' . $start . ' page=' . $page . ' valuecount=' . count($data['value']) . ' s1=' . $s1);
+            for ($i=$s1;$i<($s1+100<count($data['value'])?$s1+100:count($data['value']));$i++) {
+                $tmp[$j] = $data['value'][$i];
+                $j++;
+            }
+            $data['value'] = $tmp;
+            $result['body'] = json_encode($data);
+            return $result;
+        }
+
+    }
+    public function getusers($page = 1, $limit = 0) {
+        if ($page>1) {
+            $url='/v1.0/users/?';
+            if ($page*$limit>999) {
+                    //TODO
+                //$result['stat'] = 500;
+                //$result['body'] = 'Too Many';
+                //return $result;
+                return $this->getusersStartEnd(($page-1)*$limit);
+            } else {
+                if (!$limit) $limit = 100;
+                $url .= '$top=' . $page * $limit . '&';
+                $url .= '$select=displayName,accountEnabled,usageLocation,id,userPrincipalName,createdDateTime,assignedLicenses';
+                $result = $this->MSAPI('GET', $url);
+                if ($result['stat']!=200) return $result;
+                $data = json_decode($result['body'], true);
+                $j = 0;
+                for ($i=($page-1)*$limit;$i<count($data['value']);$i++) {
+                    $tmp[$j] = $data['value'][$i];
+                    $j++;
+                }
+                $data['value'] = $tmp;
+                $result['body'] = json_encode($data);
+                return $result;
+            }
+            
+            if (!($link = getcache('limit_' . $limit . '_page_' . ($page-1) . '_nextlink', $this->disktag))) {
+                $result = $this->getusers(($page-1), $limit);
+                $link = json_decode($result['body'], true)['@odata.nextLink'];
+            }
+            //error_log1('link=' . $link);
+            $result = $this->MSAPI('GET', $link);
+            if ($result['stat']!=200) return $result;
+            $data = json_decode($result['body'], true);
+            if (isset($data['@odata.nextLink'])) savecache('limit_' . $limit . '_page_' . $page . '_nextlink', $data['@odata.nextLink'], $this->disktag);
+            return $result;
+        } else {
+            $page = 1;
+            $url='/v1.0/users/?';
+            if ($limit>0) $url .= '$top=' . $limit . '&';
+            $url .= '$select=displayName,accountEnabled,usageLocation,id,userPrincipalName,createdDateTime,assignedLicenses';
+            $result = $this->MSAPI('GET', $url);
+            if ($result['stat']!=200) return $result;
+            $data = json_decode($result['body'], true);
+            if (isset($data['@odata.nextLink'])) savecache('limit_' . $limit . '_page_' . $page . '_nextlink', $data['@odata.nextLink'], $this->disktag);
+            return $result;
+        }
+        
+    }
+    public function getusers1($page = 1, $limit = 0) {
+        //error_log1('page=' . $page . ', limit=' . $limit);
+        if ($page>1) {
+            if (!($link = getcache('limit_' . $limit . '_page_' . ($page-1) . '_nextlink', $this->disktag))) {
+                $result = $this->getusers(($page-1), $limit);
+                $link = json_decode($result['body'], true)['@odata.nextLink'];
+            }
+            //error_log1('link=' . $link);
+            $result = $this->MSAPI('GET', $link);
+            if ($result['stat']!=200) return $result;
+            $data = json_decode($result['body'], true);
+            if (isset($data['@odata.nextLink'])) savecache('limit_' . $limit . '_page_' . $page . '_nextlink', $data['@odata.nextLink'], $this->disktag);
+            return $result;
+        } else {
+            $page = 1;
+            $url='/v1.0/users/?';
+            if ($limit>0) $url .= '$top=' . $limit . '&';
+            $url .= '$select=displayName,accountEnabled,usageLocation,id,userPrincipalName,createdDateTime,assignedLicenses';
+            $result = $this->MSAPI('GET', $url);
+            if ($result['stat']!=200) return $result;
+            $data = json_decode($result['body'], true);
+            if (isset($data['@odata.nextLink'])) savecache('limit_' . $limit . '_page_' . $page . '_nextlink', $data['@odata.nextLink'], $this->disktag);
+            return $result;
+        }
+        
     }
     public function getGlobalAdmins() {
         if (!($GlobalAdmins=getcache('GlobalAdmins', $this->disktag))) {
@@ -589,7 +699,7 @@ class Onedrive {
         return true;
     }
 
-    protected function MSAPI($method, $path, $data = '')
+    protected function MSAPI($method, $path, $data = '', $headers = [])
     {
         $activeLimit = getConfig('activeLimit', $this->disktag);
         if ($activeLimit!='') {
