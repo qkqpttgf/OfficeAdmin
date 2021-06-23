@@ -1745,10 +1745,12 @@ function render_list($drive = null)
             table.on(\'tool(table)\', function(obj){
                 if(obj.event === \'del\'){
                     layer.confirm(\'真的删除 \' + obj.data.userPrincipalName + \' 吗\', function(index){
+                        let loadix = layer.load(2);
                         $.post("?a=admin_delete&account=' . $_SERVER['disktag'] . '",{email:obj.data.userPrincipalName,id:obj.data.id},function(res){
                             if (res.code == 0) {
                                 obj.del();//删除表格这行数据
                             }
+                            layer.close(loadix);
                             layer.msg(res.msg);
                         },\'json\');
                     });
@@ -1786,6 +1788,7 @@ function render_list($drive = null)
                                     data: layui.table.cache["table"]
                                 });
                             }
+                            layer.close(loadix);
                             layer.msg(res.msg);
                         },\'json\');
                     });
@@ -1804,6 +1807,7 @@ function render_list($drive = null)
                                     data: layui.table.cache["table"]
                                 });
                             }
+                            layer.close(loadix);
                             layer.msg(res.msg);
                         },\'json\');
                     });
@@ -1892,6 +1896,7 @@ function render_list($drive = null)
                     sku:skus,
                 };
                 $.post("?a=admin_add_account&account=' . $_SERVER['disktag'] . '",data,function(res){
+                    let loadix = layer.load(2);
                     //console.log(res.code + res.msg);
                     if (res.code == 0) {
                         let r = JSON.parse(res.msg);
@@ -1925,6 +1930,7 @@ function render_list($drive = null)
                         }
                         layer.msg(res.msg);
                     }
+                    layer.close(loadix);
                 },\'json\');
             })
             $(\'#submitaddsubscribe\').click(function(){
@@ -1948,6 +1954,7 @@ function render_list($drive = null)
                     sku:skus,
                 };
                 //console.log(data);
+                let loadix = layer.load(2);
                 $.post("?a=add_subscribe&account=' . $_SERVER['disktag'] . '",data,function(res){
                     //console.log(res.code + res.msg);
                     if (res.code == 0) {
@@ -1964,6 +1971,7 @@ function render_list($drive = null)
                         }
                         layer.msg(res.msg);
                     }
+                    layer.close(loadix);
                 },\'json\');
             });
             form.on("switch(accountactive)", function(obj){
@@ -1973,7 +1981,6 @@ function render_list($drive = null)
                     let loadix = layer.load(2, {shade: [0.1,"#fff"]});
                     $.post("?a=invitation_code_activeaccount&account=' . $_SERVER['disktag'] . '",{email:obj.value},function(res){
                         if (res.code == 0) {
-                            //layer.close(loadix);
                             layer.closeAll();
                             //obj.elem.checked = true;
                             //obj.elem.setAttribute("lay-filter", "accountinactive");
@@ -1984,6 +1991,7 @@ function render_list($drive = null)
                                 data: layui.table.cache["table"]
                             });
                         }
+                        layer.close(loadix);
                         layer.msg(res.msg);
                     },\'json\');
                 });
@@ -2011,6 +2019,7 @@ function render_list($drive = null)
                                 data: layui.table.cache["table"]
                             });
                         }
+                        layer.close(loadix);
                         layer.msg(res.msg);
                     },\'json\');
                 });
