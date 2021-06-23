@@ -28,6 +28,10 @@ $license = [
     'STANDARDWOFFPACK_IW_FACULTY' => [
         'skuid' => '78e66a63-337a-4a9a-8959-41c6654dfb56',
         'name' => 'A1P教职工'
+    ],
+    'EXCHANGESTANDARD_STUDENT' => [
+        'skuid' => 'ad2fe44a-915d-4e2b-ade1-6766d50a9d9c',
+        'name' => 'Exchange Online（计划 1）学生版'
     ]
 ];
 
