@@ -155,7 +155,7 @@ function main($path)
 
     // login
     if (!$_SERVER['admin']) {
-        if (isset($_GET['a'])&&$_GET['a']==='getusers') return output(response(1, "过期，请重新登录"));
+        if (isset($_GET['a'])) return output(response(1, "过期，请重新登录"));
         else return adminform();
     }
 
@@ -585,14 +585,17 @@ function adminoperate()
     $tmparr['statusCode'] = 0;
 
     if($_GET['a'] == 'getusers'){
-        $data = $drive->getusers();
+        //$data = $drive->getusers();
+        $data = $drive->getusers($_GET['page'], $_GET['limit']);
+        //error_log1(json_encode($data));
         if ($data['stat']!=200) return output(response(1,"Error",json_encode($data)));
         $globalAdmins = $drive->getGlobalAdmins();
         $skuId = null;
         foreach ($license as $k => $v) {
             $skuId[$v['skuid']] = $v['name'];
         }
-        $value = json_decode($data['body'], true)['value'];
+        $result = json_decode($data['body'], true);
+        $value = $result['value'];
         foreach($value as $k => $v){
             if (!$v['assignedLicenses']) $value[$k]['sku'] .= '无许可';
             else foreach ($v['assignedLicenses'] as $k1 => $v1) {
@@ -610,7 +613,11 @@ function adminoperate()
             if (isset($globalAdmins[$v['userPrincipalName']])) $value[$k]['isGlobalAdmin'] = true;
             else $value[$k]['isGlobalAdmin'] = false;
         }
-        return output(response(0,"获取成员信息成功",$value,count($value)));
+        //$counts = ($_GET['page']-1)*$_GET['limit'] + count($value);
+        //if (isset($result['@odata.nextLink'])) $counts++;
+        $counts = $drive->getuserscounts();
+
+        return output(response(0, "获取成员信息成功", $value, $counts));
     }
     if ($_GET['a'] == 'admin_add_account') {
         $password = $_POST['password'];
@@ -1642,18 +1649,14 @@ function render_list($drive = null)
     }
     $html .= '
     </body>
-    <!--<a class="layui-btn layui-btn-primary layui-btn-xs" lay-event="addsubscribe">分配订阅</a>-->
+
     <script type="text/html" id="buttons">
-{{# if(d.accountEnabled!=true){}}
-        <a class="layui-btn layui-btn layui-btn-xs" lay-event="accountactive">允许登录</a>
-{{# } else { }}
-        <a class="layui-btn layui-btn-warm layui-btn-xs" lay-event="accountinactive">禁止登录</a>
-{{# } }}
 {{# if(d.isGlobalAdmin!=true){}}
         <a class="layui-btn layui-btn-warm layui-btn-xs" lay-event="setuserasadminbyid">设为管理</a>
 {{# } else { }}
         <a class="layui-btn layui-btn-normal layui-btn-xs" lay-event="deluserasadminbyid">取消管理</a>
 {{# } }}
+        <a class="layui-btn layui-btn-primary layui-btn-xs" lay-event="resetpassword">重置密码</a>
         <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
     </script>
     <script src="//unpkg.com/layui@2.6.8/dist/layui.js"></script>
@@ -1670,6 +1673,8 @@ function render_list($drive = null)
                 cellMinWidth: 60,//全局定义常规单元格的最小宽度
                 height: \'full-100\',
                 loading: true,
+                limit: 100,
+                page: true,
                 cols: [[
                     //align属性是文字在列表中的位置 可选参数left center right
                     //sort属性是排序功能
@@ -1703,6 +1708,16 @@ function render_list($drive = null)
                             return \'<span style="color:red;">禁用</span>\';
                         }
                     }},*/
+                    {field:\'accountEnabled\', title: \'账户状态\', align: \'center\', templet: function(d){
+                        let s = \'<input value="\' + d.userPrincipalName + \'" lineid="\' + d.LAY_TABLE_INDEX + \'" type="checkbox" lay-skin="switch" lay-text="正常|禁用" \';
+                        if(d.accountEnabled == true){
+                            s += \'checked lay-filter="accountinactive"\';
+                        }else{
+                            s += \'lay-filter="accountactive"\';
+                        }
+                        s += \'>\';
+                        return s;
+                    }},
                     {field:\'usageLocation\', title: \'地区\', align: \'center\'},
                     {field:\'sku\', title: \'许可证\', align: \'center\', templet: function(d){
                         let s = \'<a lay-event="addsubscribe">\';
@@ -1738,49 +1753,38 @@ function render_list($drive = null)
                         },\'json\');
                     });
                 }
-                if(obj.event === \'accountactive\'){
+                if(obj.event === \'resetpassword\'){
+                    layer.msg("前面的区域，以后再来探索吧！");
+                }
+                /*if(obj.event === \'accountactive\'){
                     layer.confirm(\'允许 \' + obj.data.userPrincipalName + \' 登录?\', function(index){
                         $.post("?a=invitation_code_activeaccount&account=' . $_SERVER['disktag'] . '",{email:obj.data.userPrincipalName},function(res){
                             if (res.code == 0) {
                                 layer.closeAll();
-                                layui.use(\'table\', function(){
-                                    var table = layui.table;
+                                //layui.use(\'table\', function(){
+                                //    var table = layui.table;
                                     table.reload(\'table\', { //表格的id
-                                        url:"?a=getusers&account=' . $_SERVER['disktag'] . '",
+                                        //url:"?a=getusers&account=' . $_SERVER['disktag'] . '",
                                     });
-                                })
+                                //})
                             }
                             layer.msg(res.msg);
                         },\'json\');
                     });
-                }
-                if(obj.event === \'accountinactive\'){
-                    layer.confirm(\'禁止 \' + obj.data.userPrincipalName + \' 登录?\', function(index){
-                        $.post("?a=invitation_code_inactiveaccount&account=' . $_SERVER['disktag'] . '",{email:obj.data.userPrincipalName},function(res){
-                            if (res.code == 0) {
-                                layer.closeAll();
-                                layui.use(\'table\', function(){
-                                    var table = layui.table;
-                                    table.reload(\'table\', { //表格的id
-                                        url:"?a=getusers&account=' . $_SERVER['disktag'] . '",
-                                    });
-                                })
-                            }
-                            layer.msg(res.msg);
-                        },\'json\');
-                    });
-                }
+                }*/
                 if(obj.event === \'setuserasadminbyid\'){
                     layer.confirm(\'设 \' + obj.data.userPrincipalName + \' 为管理?\', function(index){
+                        let loadix = layer.load(2);
                         $.post("?a=invitation_code_setuserasadminbyid&account=' . $_SERVER['disktag'] . '",{id:obj.data.id},function(res){
                             if (res.code == 0) {
                                 layer.closeAll();
-                                layui.use(\'table\', function(){
-                                    var table = layui.table;
-                                    table.reload(\'table\', { //表格的id
-                                        url:"?a=getusers&account=' . $_SERVER['disktag'] . '",
-                                    });
-                                })
+                                layui.table.cache["table"].forEach(function(i){
+                                    if (i.id==obj.data.id) layui.table.cache["table"][i.LAY_TABLE_INDEX].isGlobalAdmin = true;
+                                });
+                                table.reload("table", { //表格的id
+                                    url: "",
+                                    data: layui.table.cache["table"]
+                                });
                             }
                             layer.msg(res.msg);
                         },\'json\');
@@ -1788,15 +1792,17 @@ function render_list($drive = null)
                 }
                 if(obj.event === \'deluserasadminbyid\'){
                     layer.confirm(\'取消 \' + obj.data.userPrincipalName + \' 管理?\', function(index){
+                        let loadix = layer.load(2);
                         $.post("?a=invitation_code_deluserasadminbyid&account=' . $_SERVER['disktag'] . '",{id:obj.data.id},function(res){
                             if (res.code == 0) {
                                 layer.closeAll();
-                                layui.use(\'table\', function(){
-                                    var table = layui.table;
-                                    table.reload(\'table\', { //表格的id
-                                        url:"?a=getusers&account=' . $_SERVER['disktag'] . '",
-                                    });
-                                })
+                                layui.table.cache["table"].forEach(function(i){
+                                    if (i.id==obj.data.id) layui.table.cache["table"][i.LAY_TABLE_INDEX].isGlobalAdmin = false;
+                                });
+                                table.reload("table", { //表格的id
+                                    url: "",
+                                    data: layui.table.cache["table"]
+                                });
                             }
                             layer.msg(res.msg);
                         },\'json\');
@@ -1903,19 +1909,13 @@ function render_list($drive = null)
                             tmptextarea.setSelectionRange(0, tmptextarea.value.length);
                             document.execCommand("copy");
                             layer.msg("复制成功");
-                            layui.use(\'table\', function(){
-                                var table = layui.table;
-                                table.reload(\'table\', { //表格的id
-                                    url:"?a=getusers&account=' . $_SERVER['disktag'] . '",
-                                });
+                            table.reload(\'table\', { //表格的id
+                                //url:"?a=getusers&account=' . $_SERVER['disktag'] . '",
                             });
                         }, function (index) {
                             layer.closeAll();
-                            layui.use(\'table\', function(){
-                                var table = layui.table;
-                                table.reload(\'table\', { //表格的id
-                                    url:"?a=getusers&account=' . $_SERVER['disktag'] . '",
-                                });
+                            table.reload(\'table\', { //表格的id
+                                //url:"?a=getusers&account=' . $_SERVER['disktag'] . '",
                             });
                         });
                     } else {
@@ -1954,11 +1954,8 @@ function render_list($drive = null)
                         let r = JSON.parse(res.msg);
                         layer.msg(r.msg);
                         layer.closeAll();
-                        layui.use(\'table\', function(){
-                            var table = layui.table;
-                            table.reload(\'table\', { //表格的id
-                                url:"?a=getusers&account=' . $_SERVER['disktag'] . '",
-                            });
+                        table.reload(\'table\', { //表格的id
+                            //url:"?a=getusers&account=' . $_SERVER['disktag'] . '",
                         });
                     } else {
                         if (res.code > 1) alert(res.code + JSON.parse(res.msg).error.message);
@@ -1968,7 +1965,56 @@ function render_list($drive = null)
                         layer.msg(res.msg);
                     }
                 },\'json\');
-            })';
+            });
+            form.on("switch(accountactive)", function(obj){
+                obj.elem.checked = false;
+                form.render("checkbox");
+                layer.confirm(\'允许 \' + obj.value + \' 登录?\', function(index){
+                    let loadix = layer.load(2, {shade: [0.1,"#fff"]});
+                    $.post("?a=invitation_code_activeaccount&account=' . $_SERVER['disktag'] . '",{email:obj.value},function(res){
+                        if (res.code == 0) {
+                            //layer.close(loadix);
+                            layer.closeAll();
+                            //obj.elem.checked = true;
+                            //obj.elem.setAttribute("lay-filter", "accountinactive");
+                            layui.table.cache["table"][obj.elem.getAttribute("lineid")].accountEnabled = true;
+                            //form.render("checkbox");
+                            table.reload("table", { //表格的id
+                                url: "",
+                                data: layui.table.cache["table"]
+                            });
+                        }
+                        layer.msg(res.msg);
+                    },\'json\');
+                });
+            });
+            form.on("switch(accountinactive)", function(obj){
+                obj.elem.checked = true;
+                form.render("checkbox");
+                //console.log(obj.elem.checked);
+                //console.log(obj.elem.getAttribute("account"));
+                //console.log(obj.elem.checked);
+                //console.log(obj);
+                //console.log(this.checked);
+                //console.log(layui.table);
+                //console.log(layui.table.cache["table"]);
+                //layui.table.cache["table"][this.getAttribute("lineid")].isGlobalAdmin = true;
+                //let d = layui.table.cache["table"][this.getAttribute("lineid")];
+                layer.confirm(\'禁止 \' + obj.value + \' 登录?\', function(index){
+                    let loadix = layer.load(2);
+                    $.post("?a=invitation_code_inactiveaccount&account=' . $_SERVER['disktag'] . '",{email:obj.value},function(res){
+                        if (res.code == 0) {
+                            layer.closeAll();
+                            layui.table.cache["table"][obj.elem.getAttribute("lineid")].accountEnabled = false;
+                            table.reload("table", { //表格的id
+                                url: "",
+                                data: layui.table.cache["table"]
+                            });
+                        }
+                        layer.msg(res.msg);
+                    },\'json\');
+                });
+            });';
     $html .= '
             form.on(\'select(account)\', function (data) {
                     //获取当前选中下拉项的索引
