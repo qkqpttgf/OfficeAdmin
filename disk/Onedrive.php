@@ -236,6 +236,12 @@ class Onedrive {
         $url="/v1.0/users/" . $user_email;
         return $this->MSAPI('DELETE', $url);
     }
+    public function resetpassword ($user_email, $password){
+        $url="/v1.0/users/" . $user_email;
+        $data['passwordProfile']['password'] = $password;
+        $data['passwordProfile']['forceChangePasswordNextSignIn'] = false;
+        return $this->MSAPI('PATCH', $url, json_encode($data));
+    }
     public function accountactive($user_email){
         $url="/v1.0/users/" . $user_email;
         $jsdata='{"accountEnabled":"true"}';
@@ -417,6 +423,10 @@ class Onedrive {
             $tmp['tenant_id'] = $result['id'];
             $tmp['defaultCountry'] = $result['countryLetterCode'];
 
+            //$api = '/v1.0/applications/' . getConfig('client_resid', $this->disktag);
+            //$result = $this->MSAPI('GET', $api);
+            //return message($result['stat'] . json_encode(json_decode($result['body']), JSON_PRETTY_PRINT), 'aaa', $result['stat']);
+
             $api = '/v1.0/applications/' . getConfig('client_resid', $this->disktag) . '/addPassword';
             $data = null;
             $data['passwordCredential']['displayName'] = '100year';
@@ -464,6 +474,8 @@ class Onedrive {
             $data['requiredResourceAccess'][0]["resourceAccess"][1]['type'] = "Role";
             $data['requiredResourceAccess'][0]["resourceAccess"][2]['id'] = "19dbc75e-c2e2-444c-a770-ec69d8559fc7";
             $data['requiredResourceAccess'][0]["resourceAccess"][2]['type'] = "Role";
+            //$data['requiredResourceAccess'][0]["resourceAccess"][3]['id'] = "0e263e50-5827-48a4-b97c-d940288653c7";
+            //$data['requiredResourceAccess'][0]["resourceAccess"][3]['type'] = "Scope";
             $arr1 = $this->MSAPI('POST', $api, json_encode($data));
             //$html = $arr1['stat'] . json_encode(json_decode($arr1['body'], true), JSON_PRETTY_PRINT);
             //return message($html);
