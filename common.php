@@ -705,6 +705,12 @@ function adminoperate()
         if ($result['stat']==204) return output(response(0, '删除 ' . $_POST['email'] . ' 成功'));
         return output(response($result['stat'], $result['body']));
     }
+    if ($_GET['a'] == 'admin_resetpassword') {
+        $password = getRandomPass($_POST['email']);
+        $result = $drive->resetpassword($_POST['email'], $password);
+        if ($result['stat']==204) return output(response(0, '重置 ' . $_POST['email'] . ' 成功'));
+        return output(response($result['stat'], $result['body']));
+    }
     if ($_GET['a'] == 'invitation_code_activeaccount') {
         $user_email = !empty($_POST['email']) ? $_POST['email'] : 0;
         $result = $drive->accountactive($user_email);
@@ -1649,14 +1655,13 @@ function render_list($drive = null)
     }
     $html .= '
     </body>
-
+    <!--<a class="layui-btn layui-btn-primary layui-btn-xs" lay-event="resetpassword">重置密码</a>-->
     <script type="text/html" id="buttons">
 {{# if(d.isGlobalAdmin!=true){}}
         <a class="layui-btn layui-btn-warm layui-btn-xs" lay-event="setuserasadminbyid">设为管理</a>
 {{# } else { }}
         <a class="layui-btn layui-btn-normal layui-btn-xs" lay-event="deluserasadminbyid">取消管理</a>
 {{# } }}
-        <a class="layui-btn layui-btn-primary layui-btn-xs" lay-event="resetpassword">重置密码</a>
         <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
     </script>
     <script src="//unpkg.com/layui@2.6.8/dist/layui.js"></script>
@@ -1708,7 +1713,7 @@ function render_list($drive = null)
                             return \'<span style="color:red;">禁用</span>\';
                         }
                     }},*/
-                    {field:\'accountEnabled\', title: \'账户状态\', width: 100, align: \'center\', templet: function(d){
+                    {field:\'accountEnabled\', title: \'账户状态\', width: 95, align: \'center\', templet: function(d){
                         let s = \'<input value="\' + d.userPrincipalName + \'" lineIndex="\' + d.LAY_TABLE_INDEX + \'" type="checkbox" lay-skin="switch" lay-text="正常|禁用" \';
                         if(d.accountEnabled == true){
                             s += \'checked lay-filter="accountinactive"\';
@@ -1738,7 +1743,7 @@ function render_list($drive = null)
                         }
                     }},*/
                     {field:\'createdDateTime\', title: \'创建时间\', align: \'center\'},
-                    {/*fixed:\'right\',*/title: \'操作\', /*width: 280,*/width: 220, align:\'center\', toolbar: \'#buttons\'}
+                    {/*fixed:\'right\',*/title: \'操作\', /*width: 280,width: 220,*/width: 140, align:\'center\', toolbar: \'#buttons\'}
                 ]]
             });
                //监听
@@ -1755,9 +1760,18 @@ function render_list($drive = null)
                         },\'json\');
                     });
                 }
-                if(obj.event === \'resetpassword\'){
-                    layer.msg("前面的区域，以后再来探索吧！");
-                }
+                /*if(obj.event === \'resetpassword\'){
+                    layer.msg("前面的区域，以后再来探索吧！");return;
+                    layer.confirm(\'重置 \' + obj.data.userPrincipalName + \' 密码?\', function(index){
+                        $.post("?a=admin_resetpassword&account=' . $_SERVER['disktag'] . '",{email:obj.data.userPrincipalName},function(res){
+                            if (res.code == 0) {
+                                layer.closeAll();
+                                //table.reload(\'table\');
+                            }
+                            layer.msg(res.msg);
+                        },\'json\');
+                    });
+                }*/
                 /*if(obj.event === \'accountactive\'){
                     layer.confirm(\'允许 \' + obj.data.userPrincipalName + \' 登录?\', function(index){
                         $.post("?a=invitation_code_activeaccount&account=' . $_SERVER['disktag'] . '",{email:obj.data.userPrincipalName},function(res){
