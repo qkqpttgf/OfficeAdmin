@@ -589,7 +589,10 @@ function adminoperate()
         $data = $drive->getusers($_GET['page'], $_GET['limit']);
         //error_log1(json_encode($data));
         if ($data['stat']!=200) return output(response(1,"Error",json_encode($data)));
-        $globalAdmins = $drive->getGlobalAdmins();
+        $getGlobalAdmins = $drive->getGlobalAdmins();
+        foreach ($getGlobalAdmins as $k) {
+            $globalAdmins[$k['userPrincipalName']] = $k;
+        }
         $skuId = null;
         foreach ($license as $k => $v) {
             $skuId[$v['skuid']] = $v['name'];
@@ -1724,7 +1727,7 @@ function render_list($drive = null)
                         return s;
                     }},
                     {field:\'usageLocation\', title: \'地区\', align: \'center\'},
-                    {field:\'sku\', title: \'许可证\', align: \'center\', templet: function(d){
+                    {field:\'sku\', title: \'许可证\', width: 95, align: \'center\', templet: function(d){
                         let s = \'<a lay-event="addsubscribe">\';
                         //class="layui-btn layui-btn-primary layui-btn-xs"
                         if(d.sku == \'无许可\'){
