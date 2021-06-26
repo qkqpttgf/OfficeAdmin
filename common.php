@@ -2051,8 +2051,11 @@ function render_list($drive = null)
                     //let goodsName = data.elem[indexGID].title;
                     //获取当前选中下拉项的 value值
                     //let goodsID = data.value;
-                layer.confirm(\'确认切换 \' + data.elem[data.elem.selectedIndex].text + \' 全局?\', function(index){
-                    var account = $(\'#account\').val();
+                var account = $(\'#account\').val();
+                var text = data.elem[data.elem.selectedIndex].text;
+                $(\'#account\').val("' . $_SERVER['disktag'] . '");
+                form.render("select");
+                layer.confirm(\'确认切换 \' + text + \' 全局?\', function(index){
                     location.href = "?account=" + account;
                 });
             });
