@@ -581,7 +581,7 @@ function adminform($name = '', $pass = '', $path = '')
 function adminoperate()
 {
     global $drive;
-    global $license;
+    //global $license;
     $tmparr['statusCode'] = 0;
 
     if($_GET['a'] == 'getusers'){
@@ -593,14 +593,14 @@ function adminoperate()
         foreach ($getGlobalAdmins as $k) {
             $globalAdmins[$k['userPrincipalName']] = $k;
         }
-        $skuId = null;
+        /*$skuId = null;
         foreach ($license as $k => $v) {
             $skuId[$v['skuid']] = $v['name'];
-        }
+        }*/
         $result = json_decode($data['body'], true);
         $value = $result['value'];
         foreach($value as $k => $v){
-            if (!$v['assignedLicenses']) $value[$k]['sku'] .= '无许可';
+            /*if (!$v['assignedLicenses']) $value[$k]['sku'] .= '无许可';
             else foreach ($v['assignedLicenses'] as $k1 => $v1) {
                 if($v1['skuId'] == ""){
                     $value[$k]['sku'] .= '无许可';
@@ -612,7 +612,7 @@ function adminoperate()
                     //$value[$k]['sku'] .= '未知';
                     $value[$k]['sku'] .= $v1['skuId'];
                 };
-            }
+            }*/
             if (isset($globalAdmins[$v['userPrincipalName']])) $value[$k]['isGlobalAdmin'] = true;
             else $value[$k]['isGlobalAdmin'] = false;
         }
@@ -666,13 +666,6 @@ function adminoperate()
         }
     }
     if ($_GET['a'] == 'add_subscribe') {
-        /*$del_sku = null;
-        if ($_POST['assignedLicenses']) {
-            $assignedLicenses = json_decode($_POST['assignedLicenses'], true);
-            foreach ($assignedLicenses as $k => $v) {
-                $del_sku[$k] = $v['skuId'];
-            }
-        }*/
         $tmp = json_decode($_POST['assignedLicenses'], true);
         foreach ($tmp as $k => $v) {
             //error_log1(( $k . '_' . $v));
@@ -1601,15 +1594,12 @@ function render_list($drive = null)
                 <div class="layui-form-item">
                     <label class="layui-form-label">许可证</label>
                     <div class="layui-input-inline">';
-        $skuId = null;
-        foreach ($license as $k => $v) {
-            $skuId[$v['skuid']] = $v['name'];
-        }
+        $skuId = $license;
         $skus = $drive->getSku();
         foreach ($skus as $id => $v) {
             $name = '';
             if (isset($skuId[$id])) {
-                $name = $skuId[$id];
+                $name = $skuId[$id]['name'];
             } else {
                 $name = $v['name'];
             }
@@ -1638,7 +1628,7 @@ function render_list($drive = null)
         foreach ($skus as $id => $v) {
             $name = '';
             if (isset($skuId[$id])) {
-                $name = $skuId[$id];
+                $name = $skuId[$id]['name'];
             } else {
                 $name = $v['name'];
             }
@@ -1670,6 +1660,8 @@ function render_list($drive = null)
     <script src="//unpkg.com/layui@2.6.8/dist/layui.js"></script>
     <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.6.0/jquery.js"></script>
     <script type="text/javascript" charset="utf-8">
+        var licenseData = ' . json_encode($license) . ';
+        var licenseId = ' . json_encode(array_keys($license)) . ';
         layui.use([\'table\',\'form\',\'layer\'], function(){
             var table = layui.table;
             var form = layui.form;
@@ -1727,13 +1719,20 @@ function render_list($drive = null)
                         return s;
                     }},
                     {field:\'usageLocation\', title: \'地区\', align: \'center\'},
-                    {field:\'sku\', title: \'许可证\', width: 95, align: \'center\', templet: function(d){
+                    {field:\'assignedLicenses\', title: \'许可证\', width: 95, align: \'center\', templet: function(d){
                         let s = \'<a lay-event="addsubscribe">\';
                         //class="layui-btn layui-btn-primary layui-btn-xs"
-                        if(d.sku == \'无许可\'){
+                        if(d.assignedLicenses==""){
                             s += \'<span style="color:#ff461f">无许可</span>\';
                         }else{
-                            s += d.sku;
+                            d.assignedLicenses.forEach(function(i){
+                                if (licenseId.indexOf(i.skuId)>-1) {
+                                    s += licenseData[i.skuId].name + "<br>";
+                                } else {
+                                    s += i.skuId + "<br>";
+                                }
+                            })
+                            //s = s.substr(0, s.length-4);
                         }
                         s += \'</a>\';
                         return s;
