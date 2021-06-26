@@ -155,7 +155,7 @@ function main($path)
 
     // login
     if (!$_SERVER['admin']) {
-        if (isset($_GET['a'])) return output(response(1, "过期，请重新登录"));
+        if (isset($_GET['a'])) return output(response(2, "过期，请重新登录"));
         else return adminform();
     }
 
@@ -1672,7 +1672,7 @@ function render_list($drive = null)
             var form = layui.form;
             var layer = layui.layer;';
     if ($driveok) $html .= '
-            table.render({
+            var tableRender = table.render({
                 elem: \'#table\',//表格id
                 url:"?a=getusers&account=' . $_SERVER['disktag'] . '",//list接口地址
                 cellMinWidth: 60,//全局定义常规单元格的最小宽度
@@ -1757,6 +1757,9 @@ function render_list($drive = null)
                             }
                             layer.close(loadix);
                             layer.msg(res.msg);
+                            if (res.code == 2) {
+                                window.location.reload(); //登录过期
+                            }
                         },\'json\');
                     });
                 }
@@ -1801,6 +1804,9 @@ function render_list($drive = null)
                             }
                             layer.close(loadix);
                             layer.msg(res.msg);
+                            if (res.code == 2) {
+                                window.location.reload(); //登录过期
+                            }
                         },\'json\');
                     });
                 }
@@ -1817,6 +1823,9 @@ function render_list($drive = null)
                             }
                             layer.close(loadix);
                             layer.msg(res.msg);
+                            if (res.code == 2) {
+                                window.location.reload(); //登录过期
+                            }
                         },\'json\');
                     });
                 }
@@ -1928,11 +1937,14 @@ function render_list($drive = null)
                             table.reload(\'table\');
                         });
                     } else {
+                        layer.msg(res.msg);
+                        if (res.code == 2) {
+                            window.location.reload(); //登录过期
+                        }
                         if (res.code > 1) alert(res.code + JSON.parse(res.msg).error.message);
                         else {
                             alert(res.code + JSON.parse(res.msg).msg);
                         }
-                        layer.msg(res.msg);
                     }
                     layer.close(loadix);
                 },\'json\');
@@ -1967,11 +1979,14 @@ function render_list($drive = null)
                         layer.closeAll();
                         table.reload(\'table\');
                     } else {
+                        layer.msg(res.msg);
+                        if (res.code == 2) {
+                            window.location.reload(); //登录过期
+                        }
                         if (res.code > 1) alert(res.code + JSON.parse(res.msg).error.message);
                         else {
                             alert(res.code + JSON.parse(res.msg).msg);
                         }
-                        layer.msg(res.msg);
                     }
                     layer.close(loadix);
                 },\'json\');
@@ -1992,6 +2007,9 @@ function render_list($drive = null)
                         }
                         layer.close(loadix);
                         layer.msg(res.msg);
+                        if (res.code == 2) {
+                            window.location.reload(); //登录过期
+                        }
                     },\'json\');
                 });
             });
@@ -2017,6 +2035,9 @@ function render_list($drive = null)
                         }
                         layer.close(loadix);
                         layer.msg(res.msg);
+                        if (res.code == 2) {
+                            window.location.reload(); //登录过期
+                        }
                     },\'json\');
                 });
             });';
