@@ -5,32 +5,32 @@ global $constStr;
 
 global $license;
 $license = [
-    'DEVELOPERPACK_E5' => [
-        'skuid' => 'c42b9cae-ea4f-4ab7-9717-81576235ccac',
+    'c42b9cae-ea4f-4ab7-9717-81576235ccac' => [
+        'SYSNAME' => 'DEVELOPERPACK_E5',
         'name' => 'E5开发者'
     ],
-    'FLOW_FREE' => [
-        'skuid' => 'f30db892-07e9-47e9-837c-80727f46fd3d',
+    'f30db892-07e9-47e9-837c-80727f46fd3d' => [
+        'SYSNAME' => 'FLOW_FREE',
         'name' => 'Microsoft Power Automate Free'
     ],
-    'STANDARDWOFFPACK_FACULTY' => [
-        'skuid' => '94763226-9b3c-4e75-a931-5c89701abe66',
+    '94763226-9b3c-4e75-a931-5c89701abe66' => [
+        'SYSNAME' => 'STANDARDWOFFPACK_FACULTY',
         'name' => 'A1教职工'
     ],
-    'STANDARDWOFFPACK_STUDENT' => [
-        'skuid' => '314c4481-f395-4525-be8b-2ec4bb1e9d91',
+    '314c4481-f395-4525-be8b-2ec4bb1e9d91' => [
+        'SYSNAME' => 'STANDARDWOFFPACK_STUDENT',
         'name' => 'A1学生'
     ],
-    'STANDARDWOFFPACK_IW_STUDENT' => [
-        'skuid' => 'e82ae690-a2d5-4d76-8d30-7c6e01e6022e',
+    'e82ae690-a2d5-4d76-8d30-7c6e01e6022e' => [
+        'SYSNAME' => 'STANDARDWOFFPACK_IW_STUDENT',
         'name' => 'A1P学生'
     ],
-    'STANDARDWOFFPACK_IW_FACULTY' => [
-        'skuid' => '78e66a63-337a-4a9a-8959-41c6654dfb56',
+    '78e66a63-337a-4a9a-8959-41c6654dfb56' => [
+        'SYSNAME' => 'STANDARDWOFFPACK_IW_FACULTY',
         'name' => 'A1P教职工'
     ],
-    'EXCHANGESTANDARD_STUDENT' => [
-        'skuid' => 'ad2fe44a-915d-4e2b-ade1-6766d50a9d9c',
+    'ad2fe44a-915d-4e2b-ade1-6766d50a9d9c' => [
+        'SYSNAME' => 'EXCHANGESTANDARD_STUDENT',
         'name' => 'Exchange Online（计划 1）学生版'
     ]
 ];
