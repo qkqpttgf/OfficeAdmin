@@ -32,6 +32,7 @@ $EnvConfigs = [
     'client_resid'      => 0b100,
     'client_secret'     => 0b101,
     'defaultCountry'    => 0b100,
+    'thisAccount'       => 0b100,
     'diskname'          => 0b111,
 ];
 
@@ -590,34 +591,18 @@ function adminoperate()
         //error_log1(json_encode($data));
         if ($data['stat']!=200) return output(response(1,"Error",json_encode($data)));
         $getGlobalAdmins = $drive->getGlobalAdmins();
+        $me = getConfig('thisAccount', $_SERVER['disktag']);
         foreach ($getGlobalAdmins as $k) {
             $globalAdmins[$k['userPrincipalName']] = $k;
         }
-        /*$skuId = null;
-        foreach ($license as $k => $v) {
-            $skuId[$v['skuid']] = $v['name'];
-        }*/
         $result = json_decode($data['body'], true);
         $value = $result['value'];
         foreach($value as $k => $v){
-            /*if (!$v['assignedLicenses']) $value[$k]['sku'] .= '无许可';
-            else foreach ($v['assignedLicenses'] as $k1 => $v1) {
-                if($v1['skuId'] == ""){
-                    $value[$k]['sku'] .= '无许可';
-                } elseif (isset($skuId[$v1['skuId']])) {
-                    if ($value[$k]['sku']!='') $value[$k]['sku'] .= '<br>';
-                    $value[$k]['sku'] .= $skuId[$v1['skuId']];
-                } else {
-                    if ($value[$k]['sku']!='') $value[$k]['sku'] .= '<br>';
-                    //$value[$k]['sku'] .= '未知';
-                    $value[$k]['sku'] .= $v1['skuId'];
-                };
-            }*/
             if (isset($globalAdmins[$v['userPrincipalName']])) $value[$k]['isGlobalAdmin'] = true;
             else $value[$k]['isGlobalAdmin'] = false;
+            if ($v['userPrincipalName']==$me) $value[$k]['isMe'] = true;
+            else $value[$k]['isMe'] = false;
         }
-        //$counts = ($_GET['page']-1)*$_GET['limit'] + count($value);
-        //if (isset($result['@odata.nextLink'])) $counts++;
         $counts = $drive->getuserscounts();
 
         return output(response(0, "获取成员信息成功", $value, $counts));
@@ -1653,9 +1638,13 @@ function render_list($drive = null)
 {{# if(d.isGlobalAdmin!=true){}}
         <a class="layui-btn layui-btn-warm layui-btn-xs" lay-event="setuserasadminbyid">设为管理</a>
 {{# } else { }}
+    {{# if(d.isMe!=true){}}
         <a class="layui-btn layui-btn-normal layui-btn-xs" lay-event="deluserasadminbyid">取消管理</a>
+    {{# } }}
 {{# } }}
+{{# if(d.isMe!=true){}}
         <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+{{# } }}
     </script>
     <script src="//unpkg.com/layui@2.6.8/dist/layui.js"></script>
     <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.6.0/jquery.js"></script>
@@ -1746,7 +1735,12 @@ function render_list($drive = null)
                     }},*/
                     {field:\'createdDateTime\', title: \'创建时间\', align: \'center\'},
                     {/*fixed:\'right\',*/title: \'操作\', /*width: 280,width: 220,*/width: 140, align:\'center\', toolbar: \'#buttons\'}
-                ]]
+                ]],
+                done: function (res, curr, count) {
+                    layui.table.cache["table"].forEach(function(i){
+                        if (i.isMe==true) $("tr[data-index=" + i.LAY_TABLE_INDEX + "]").attr({"style":"background:#87CEEB"});
+                    });
+                }
             });
                //监听
             table.on(\'tool(table)\', function(obj){
