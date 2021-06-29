@@ -27,7 +27,6 @@ class Onedrive {
         }
     }
 
-
     public function isfine()
     {
         if (!$this->access_token) return false;
@@ -291,8 +290,6 @@ class Onedrive {
                 $tmp['tenant_id'] = $_POST['tenant_id'];
                 $tmp['client_id'] = $_POST['client_id'];
                 $tmp['client_secret'] = $_POST['client_secret'];
-                foreach ($_POST['sku'] as $sku) $tmp['sku'] .= '|' . $sku;
-                $tmp['sku'] = substr($tmp['sku'], 1);
 
                 $response = setConfigResponse( setConfig($tmp, $this->disktag) );
                 if (api_error($response)) {
@@ -584,7 +581,7 @@ class Onedrive {
         $html .='
         <input type="submit" value="' . getconstStr('Submit') . '">
     </form>
-    or <a href="?AddDisk=Onedrive&AddClient">Click here input id&secret</a>
+    or<br> <a href="?AddDisk=Onedrive&AddClient">Click here input id&secret manually<br> 点这里手动输入id与secret</a>
 </div>
     <script>
         function notnull(t)
