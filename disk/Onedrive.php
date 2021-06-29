@@ -9,7 +9,7 @@ class Onedrive {
         $this->redirect_uri = 'https://scfonedrive.github.io';
         $this->oauth_url = 'https://login.microsoftonline.com/common/oauth2/v2.0/';
         $this->api_url = 'https://graph.microsoft.com';
-        $this->scope = 'https://graph.microsoft.com/Application.ReadWrite.All https://graph.microsoft.com/Directory.ReadWrite.All https://graph.microsoft.com/User.ReadWrite.All https://graph.microsoft.com/RoleManagement.ReadWrite.Directory offline_access';
+        $this->scope = 'https://graph.microsoft.com/Application.ReadWrite.All https://graph.microsoft.com/Directory.ReadWrite.All https://graph.microsoft.com/User.ReadWrite.All https://graph.microsoft.com/RoleManagement.ReadWrite.Directory https://graph.microsoft.com/Directory.ReadWrite.All offline_access';
         $this->scope = urlencode($this->scope);
         if ($tag!='') {
             if (isset($_GET['AddDisk'])) {
@@ -22,8 +22,8 @@ class Onedrive {
             $this->client_secret = urlencode($this->client_secret);
             $this->tenant_id = getConfig('tenant_id', $tag);
             $this->oauth_url1 = 'https://login.microsoftonline.com/' . $this->tenant_id . '/oauth2/v2.0/token';
-            $res = $this->get_access_token();
             //$res = $this->get_access_token1(getConfig('refresh_token', $tag));
+            $res = $this->get_access_token();
         }
     }
 
@@ -106,7 +106,6 @@ class Onedrive {
                 $result['body'] = json_encode($data);
                 return $result;
             }
-            
             if (!($link = getcache('limit_' . $limit . '_page_' . ($page-1) . '_nextlink', $this->disktag))) {
                 $result = $this->getusers(($page-1), $limit);
                 $link = json_decode($result['body'], true)['@odata.nextLink'];
@@ -427,6 +426,11 @@ class Onedrive {
                 $response = $this->get_access_token1($refresh_token);
                 if (!$response) return message($this->error['body'], $this->error['stat'] . ' Error', $this->error['stat']);
             }
+            //$response = curl('GET', $this->api_url . '/v1.0/me', '', ['Authorization'=>'Bearer ' . $ret['access_token']]);
+            $response = $this->MSAPI('GET', '/v1.0/me');
+            error_log1('GET ME ' . $response['body']);
+            $result = json_decode($response['body'], true);
+            $tmp['thisAccount'] = $result['userPrincipalName'];
 
             $api = '/v1.0/applications';
             $data = null;
@@ -450,10 +454,10 @@ class Onedrive {
             $resId = $result1['id'];
             $client_id = $result1['appId'];
 
-            $tmptoken['client_resid'] = $resId;
-            $tmptoken['client_id'] = $client_id;
+            $tmp['client_resid'] = $resId;
+            $tmp['client_id'] = $client_id;
             
-            $response = setConfigResponse( setConfig($tmptoken, $this->disktag) );
+            $response = setConfigResponse( setConfig($tmp, $this->disktag) );
             if (api_error($response)) {
                 $html = api_error_msg($response);
                 $title = 'Error';
@@ -464,7 +468,8 @@ class Onedrive {
             elseif (get_class($this)=='OnedriveCN') $host = 'portal.azure.cn';
             else return message('Drive ver Error', 'Error', 201);
             $title = 'Create Client';
-            $html = 'client_id: ' . $client_id . '<br>
+            $html = 'Account: ' . $tmp['thisAccount'] . '<br>
+            client_id: ' . $client_id . '<br>
             <a href="https://' . $host . '/#blade/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/CallAnAPI/appId/' . $client_id . '/isMSAApp/" target="_blank">Click here</a> add scope: <br>
             点击跳转，去代表组织同意，再来这点下一步。<br>
             Then <a href="' . $url . '?AddDisk=' . get_class($this) . '&disktag=' . $_GET['disktag'] . '&CreateClient1">next step下一步</a>';
@@ -636,7 +641,6 @@ class Onedrive {
             error_log1('[' . $this->disktag . '] Get access token:' . json_encode($tmp, JSON_PRETTY_PRINT));
             $this->access_token = $ret['access_token'];
             savecache('access_token', $this->access_token, $this->disktag, $ret['expires_in'] - 300);
-            return true;
         }
         return true;
     }
@@ -670,7 +674,6 @@ class Onedrive {
             $this->access_token = $ret['access_token'];
             savecache('tmp_access_token', $this->access_token, $this->disktag, $ret['expires_in'] - 300);
             if (time()>getConfig('token_expires', $this->disktag)) setConfig([ 'refresh_token' => $ret['refresh_token'], 'token_expires' => time()+7*24*60*60 ], $this->disktag);
-            return true;
         }
         return true;
     }
