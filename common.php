@@ -742,25 +742,26 @@ function getRandomPass($user) {
     while ($p == 0) {
         $strPol = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
         $max1 = rand(1, 2);
-        if (strlen($str)>0) $max1 = $max - strlen($str);
+        if (strlen($str)>$max1) $max1 = 1;
         for ($i=0;$i<$max1;$i++) $str .= $strPol[rand(0, 25)];
 
         $strPol = 'abcdefghijklmnopqrstuvwxyz';
-        $max2 = rand(1, 2);
-        if (strlen($str)>0) $max2 = $max - strlen($str);
+        $max2 = rand(1, 3);
+        if (strlen($str)>($max1+$max2)) $max2 = 1;
         for ($i=0;$i<$max2;$i++) $str .= $strPol[rand(0, 25)];
 
         $strPol = '0123456789';
-        $max3 = $max - $max1 - $max2;
+        if (strlen($str)<$max) $max3 = $max - strlen($str);
+        else $max3 = 1;
         for ($i=0;$i<$max3;$i++) $str .= $strPol[rand(0, 9)];
 
         if (strpos(strtolower($str), strtolower($user))===false) $p = 1;
         else while (strpos(strtolower($str), strtolower($user))>-1) {
             $t = strpos(strtolower($str), strtolower($user));
-            $str = substr($str, 0, $t) . substr($str, $t+strlen($user));
+            $str = substr($str, 0, $t) . substr($str, $t+1);
         }
     }
-    
+
     return $str;
 }
 
@@ -1917,7 +1918,8 @@ function render_list($drive = null)
                         layer.confirm("用户名：" + r.userPrincipalName + "<br>密码：" + r.password,
                         {
                             btn: ["复制", "确认"]
-                        }, function (index) {
+                        }, function (index, layero) {
+                            //console.log($("#layui-layer" + index).children(".layui-layer-content")[0]);
                             layer.closeAll();
                             let tmptextarea=document.createElement(\'textarea\');
                             document.body.appendChild(tmptextarea);
@@ -1928,7 +1930,7 @@ function render_list($drive = null)
                             document.execCommand("copy");
                             layer.msg("复制成功");
                             table.reload(\'table\');
-                        }, function (index) {
+                        }, function (index, layero) {
                             layer.closeAll();
                             table.reload(\'table\');
                         });
