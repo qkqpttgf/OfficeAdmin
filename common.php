@@ -156,7 +156,7 @@ function main($path)
 
     // login
     if (!$_SERVER['admin']) {
-        if (isset($_GET['a'])) return output(response(2, "过期，请重新登录"));
+        if (isset($_GET['a'])) return output(response(2, "过期，请重新登录<script>window.location.reload();</script>"));
         else return adminform();
     }
 
@@ -1451,7 +1451,7 @@ function render_list($drive = null)
         <meta http-equiv="content-type" content="text/html; charset=utf-8" />
         <meta name=viewport content="width=device-width,initial-scale=1">
         <title>Microsoft Office365 全局管理</title>
-        <link rel="stylesheet" href="//unpkg.com/layui@2.6.8/dist/css/layui.css">
+        <link rel="stylesheet" href="https://www.layuicdn.com/layui-v2.6.8/css/layui.css">
         <link href="files/mslogo.png" rel="icon" type="image/png">
         <style type="text/css">
             .layui-table-cell {
@@ -1647,7 +1647,7 @@ function render_list($drive = null)
         <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
 {{# } }}
     </script>
-    <script src="//unpkg.com/layui@2.6.8/dist/layui.js"></script>
+    <script src="https://www.layuicdn.com/layui-v2.6.8/layui.js"></script>
     <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.6.0/jquery.js"></script>
     <script type="text/javascript" charset="utf-8">
         var licenseData = ' . json_encode($license) . ';
@@ -2051,9 +2051,11 @@ function render_list($drive = null)
                 var text = data.elem[data.elem.selectedIndex].text;
                 $(\'#account\').val("' . $_SERVER['disktag'] . '");
                 form.render("select");
-                layer.confirm(\'确认切换 \' + text + \' 全局?\', function(index){
-                    location.href = "?account=" + account;
-                });
+                if (account!="' . $_SERVER['disktag'] . '") {
+                    layer.confirm(\'确认切换 \' + text + \' 全局?\', function(index){
+                        location.href = "?account=" + account;
+                    });
+                }
             });
                 /*$(\'#change_account\').click(function(){
                     layer.confirm(\'确认切换全局?\', function(index){
