@@ -1639,9 +1639,7 @@ function render_list($drive = null)
 {{# if(d.isGlobalAdmin!=true){}}
         <a class="layui-btn layui-btn-warm layui-btn-xs" lay-event="setuserasadminbyid">设为管理</a>
 {{# } else { }}
-    {{# if(d.isMe!=true){}}
         <a class="layui-btn layui-btn-normal layui-btn-xs" lay-event="deluserasadminbyid">取消管理</a>
-    {{# } }}
 {{# } }}
 {{# if(d.isMe!=true){}}
         <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
