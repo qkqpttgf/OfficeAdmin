@@ -1265,12 +1265,13 @@ function EnvOpt($needUpdate = 0)
 ';
         }
         if ($needUpdate) {
-            $frame .= '<div style="position: relative; word-wrap: break-word;">
-        ' . str_replace("\r", '<br>', $_SERVER['github_ver_new']) . '
+            $frame .= '
+<div style="position: relative; word-wrap: break-word;">
+        ' . str_replace(["\n", "\r"], '<br>' . "\n", $_SERVER['github_ver_new']) . '
 </div>
 <button onclick="document.getElementById(\'github_ver_old\').style.display=(document.getElementById(\'github_ver_old\').style.display==\'none\'?\'\':\'none\');">More...</button>
 <div id="github_ver_old" style="position: relative; word-wrap: break-word; display: none">
-        ' . str_replace("\r", '<br>', $_SERVER['github_ver_old']) . '
+        ' . str_replace(["\n", "\r"], '<br>' . "\n", $_SERVER['github_ver_old']) . '
 </div>';
         }
 
@@ -1579,10 +1580,10 @@ function render_list($drive = null)
                 </div>
                 <div class="layui-form-item">
                     <label class="layui-form-label">许可证</label>
-                    <div class="layui-input-inline">';
+                    <div class="layui-input-inline" id="addaccount_sku">';
         $skuId = $license;
         $skus = $drive->getSku();
-        foreach ($skus as $id => $v) {
+        /*foreach ($skus as $id => $v) {
             $name = '';
             if (isset($skuId[$id])) {
                 $name = $skuId[$id]['name'];
@@ -1591,7 +1592,7 @@ function render_list($drive = null)
             }
             $html .= '
                         <input type="checkbox" name="sku" title="' . $name . '(' . $v['used'] . '/' . $v['total'] . ')" value="' . $id . '" lay-skin="primary"' . (($v['total']-$v['used']<1)?' disabled':'') . '>';
-        }
+        }*/
         $html .= '
                     </div>
                 </div>
@@ -1610,8 +1611,8 @@ function render_list($drive = null)
                 <input type="hidden" class="layui-input" id="assignedLicenses" name="assignedLicenses" required lay-verify="required">
                 <div class="layui-form-item">
                     <label class="layui-form-label">许可证</label>
-                    <div class="layui-input-inline">';
-        foreach ($skus as $id => $v) {
+                    <div class="layui-input-inline" id="license_sku">';
+        /*foreach ($skus as $id => $v) {
             $name = '';
             if (isset($skuId[$id])) {
                 $name = $skuId[$id]['name'];
@@ -1620,7 +1621,7 @@ function render_list($drive = null)
             }
             $html .= '
                         <input type="checkbox" name="sku1" lay-filter="subscribe_sku" title="' . $name . '(' . $v['used'] . '/' . $v['total'] . ')" value="' . $id . '" lay-skin="primary"' . (($v['total']-$v['used']<1)?' disabled':'') . '>';
-        }
+        }*/
         $html .= '
                     </div>
                 </div>
@@ -1648,8 +1649,9 @@ function render_list($drive = null)
     <script src="https://www.layuicdn.com/layui-v2.6.8/layui.js"></script>
     <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.6.0/jquery.js"></script>
     <script type="text/javascript" charset="utf-8">
-        var licenseData = ' . json_encode($license) . ';
-        var licenseId = ' . json_encode(array_keys($license)) . ';
+        var licenseObject = ' . json_encode($license) . ';
+        var licenseObjectId = ' . json_encode(array_keys($license)) . ';
+        var license_exist = ' . json_encode($skus) . ';
         layui.use([\'table\',\'form\',\'layer\'], function(){
             var table = layui.table;
             var form = layui.form;
@@ -1714,8 +1716,8 @@ function render_list($drive = null)
                             s += \'<span style="color:#ff461f">无许可</span>\';
                         }else{
                             d.assignedLicenses.forEach(function(i){
-                                if (licenseId.indexOf(i.skuId)>-1) {
-                                    s += licenseData[i.skuId].name + "<br>";
+                                if (licenseObjectId.indexOf(i.skuId)>-1) {
+                                    s += licenseObject[i.skuId].name + "<br>";
                                 } else {
                                     s += i.skuId + "<br>";
                                 }
@@ -1845,29 +1847,15 @@ function render_list($drive = null)
                                 i++;
                             });
                             layero.find(\'input[name=assignedLicenses]\').val(JSON.stringify(licenses));
-                            //console.log(licenses);
-                            //form.on("checkbox(subscribe_sku)", function(data){
-                            //    console.log(data.elem.checked);
-                            //});
-                            layero.find(\'input[name="sku1"]\').each(function(i){
-                            //$("input:checkbox[name=\'sku1\']").each(function(i){
-                                //console.log($(this).attr("checked") + " " + $(this).val());
-                                if (licenses.indexOf($(this).val())>-1) {
-                                    $(this).prop("checked",true);
-                                    if ($(this).attr("disabled")=="disabled") {
-                                        $(this).removeAttr("disabled");
-                                        $(this).attr("willdisabled","willdisabled");
-                                    }
-                                } else {
-                                    $(this).prop("checked",false);
-                                    if ($(this).attr("willdisabled")=="willdisabled") {
-                                        $(this).attr("disabled","disabled");
-                                    }
-                                }
-                                //console.log($(this).attr("checked"));
-                            });
+                            $("#license_sku")[0].innerHTML = "";
+                            for (let i in license_exist){
+                                //console.log(license_exist[i]);
+                                let skuname = license_exist[i].name;
+                                if (licenseObjectId.indexOf(i)>-1) skuname = licenseObject[i].name;
+                                $("#license_sku")[0].innerHTML += "<input type=\"checkbox\" name=\"sku1\" lay-filter=\"subscribe_sku\" title=\"" + skuname + " (" + license_exist[i].used + "/" + license_exist[i].total + ")\" value=\"" + i + "\" lay-skin=\"primary\"" + ((license_exist[i].total-license_exist[i].used>0 || licenses.indexOf(i)>-1)?"":" disabled") + " " + ((licenses.indexOf(i)>-1)?" checked":"") + ">";
+                                //console.log($("#license_sku")[0].innerHTML);
+                            }
                             form.render("checkbox");
-                            //form.render();
                         }
                     });
                 }
@@ -1882,6 +1870,17 @@ function render_list($drive = null)
                     skin: \'layui-layer-rim\', //加上边框
                     //area: [\'48rem;\', \'28rem;\'], //宽高
                     content: $(\'#add_account_content\'),
+                    success: function(layero, index) {
+                        $("#addaccount_sku")[0].innerHTML = "";
+                        for (let i in license_exist){
+                            //console.log(license_exist[i]);
+                            let skuname = license_exist[i].name;
+                            if (licenseObjectId.indexOf(i)>-1) skuname = licenseObject[i].name;
+                            $("#addaccount_sku")[0].innerHTML += "<input type=\"checkbox\" name=\"sku\" lay-filter=\"subscribe_sku\" title=\"" + skuname + " (" + license_exist[i].used + "/" + license_exist[i].total + ")\" value=\"" + i + "\" lay-skin=\"primary\"" + ((license_exist[i].total-license_exist[i].used>0)?"":" disabled") + ">";
+                            //console.log($("#addaccount_sku")[0].innerHTML);
+                        }
+                        form.render("checkbox");
+                    }
                 });
             });
             $(\'#submitaccount\').click(function(){
@@ -1911,6 +1910,9 @@ function render_list($drive = null)
                     let loadix = layer.load(2);
                     //console.log(res.code + res.msg);
                     if (res.code == 0) {
+                        skus.forEach(function(i){
+                            license_exist[i].used++;
+                        });
                         let r = JSON.parse(res.msg);
                         layer.msg(r.msg);
                         layer.confirm("用户名：" + r.userPrincipalName + "<br>密码：" + r.password,
@@ -1970,6 +1972,12 @@ function render_list($drive = null)
                 $.post("?a=add_subscribe&account=' . $_SERVER['disktag'] . '",data,function(res){
                     //console.log(res.code + res.msg);
                     if (res.code == 0) {
+                        JSON.parse(data.assignedLicenses).forEach(function(i){
+                            license_exist[i].used--;
+                        });
+                        skus.forEach(function(i){
+                            license_exist[i].used++;
+                        });
                         let r = JSON.parse(res.msg);
                         layer.msg(r.msg);
                         layer.closeAll();
