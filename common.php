@@ -2005,6 +2005,7 @@ function render_list($drive = null)
                     title = "禁止 " + obj.value + " 登录?";
                     action = "inactiveaccount";
                 }
+                //console.log(document.querySelector("td[data-content=\'" + obj.elem.value + "\'] div") );
                 layer.confirm(title, function(index) {
                     let loadix = layer.load(2, {shade: [0.1,"#fff"]});
                     $.post("?a=" + action + "&account=' . $_SERVER['disktag'] . '",{email:obj.value},function(res) {
@@ -2015,6 +2016,11 @@ function render_list($drive = null)
                             layui.table.cache["table"][obj.elem.getAttribute("lineIndex")].accountEnabled = aim;
                             form.render("checkbox");
                             //table.reload("table");
+                            if (aim===true) {
+                                document.querySelector("td[data-content=\'" + obj.elem.value + "\'] div").innerHTML = obj.elem.value;
+                            } else {
+                                document.querySelector("td[data-content=\'" + obj.elem.value + "\'] div").innerHTML = "<span style=\"color:red;\">" + obj.elem.value + "</span>";
+                            }
                         }
                         layer.close(loadix);
                         layer.msg(res.msg);
