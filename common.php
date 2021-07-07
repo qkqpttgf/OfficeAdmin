@@ -485,10 +485,10 @@ function response($code,$msg,$data = [],$count = false) {
         'code'=>$code,
         'msg'=>$msg,
     ];
-    if($count !== false){
+    if ($count !== false) {
         $json['count'] = $count;
     }
-    if(!empty($data)){
+    if (!empty($data)) {
         $json['data'] = $data;
     }
 
@@ -585,7 +585,7 @@ function adminoperate()
     //global $license;
     $tmparr['statusCode'] = 0;
 
-    if($_GET['a'] == 'getusers'){
+    if ($_GET['a'] == 'getusers') {
         //$data = $drive->getusers();
         $data = $drive->getusers($_GET['page'], $_GET['limit']);
         //error_log1(json_encode($data));
@@ -597,7 +597,7 @@ function adminoperate()
         }
         $result = json_decode($data['body'], true);
         $value = $result['value'];
-        foreach($value as $k => $v){
+        foreach($value as $k => $v) {
             if (isset($globalAdmins[$v['userPrincipalName']])) $value[$k]['isGlobalAdmin'] = true;
             else $value[$k]['isGlobalAdmin'] = false;
             if ($v['userPrincipalName']==$me) $value[$k]['isMe'] = true;
@@ -692,7 +692,7 @@ function adminoperate()
         if ($result['stat']==204) return output(response(0, '重置 ' . $_POST['email'] . ' 成功'));
         return output(response($result['stat'], $result['body']));
     }
-    if ($_GET['a'] == 'invitation_code_activeaccount') {
+    if ($_GET['a'] == 'activeaccount') {
         $user_email = !empty($_POST['email']) ? $_POST['email'] : 0;
         $result = $drive->accountactive($user_email);
         //error_log1(json_encode($result));
@@ -702,7 +702,7 @@ function adminoperate()
             return output(response(1, $user_email . " 解锁失败"));
         }
     }
-    if ($_GET['a'] == 'invitation_code_inactiveaccount') {
+    if ($_GET['a'] == 'inactiveaccount') {
         $user_email = !empty($_POST['email']) ? $_POST['email'] : 0;
         $result = $drive->accountinactive($user_email);
         //error_log1(json_encode($result));
@@ -712,7 +712,7 @@ function adminoperate()
             return output(response(1, $user_email . " 禁止失败"));
         }
     }
-    if ($_GET['a'] == 'invitation_code_setuserasadminbyid') {
+    if ($_GET['a'] == 'setuserasadminbyid') {
         $user_id = !empty($_POST['id']) ? $_POST['id'] : 0;
         $result = $drive->setuserasadminbyid($user_id);
         if ($result['stat']!=204) {
@@ -721,7 +721,7 @@ function adminoperate()
             return output(response(0, "设置管理成功"));
         }
     }
-    if ($_GET['a'] == 'invitation_code_deluserasadminbyid') {
+    if ($_GET['a'] == 'deluserasadminbyid') {
         $user_id = !empty($_POST['id']) ? $_POST['id'] : 0;
         //error_log1(json_encode($_POST));
         $result = $drive->deluserasadminbyid($user_id);
@@ -855,7 +855,7 @@ function EnvOpt($needUpdate = 0)
         /*if ($tmp['domain_path']!='') {
             $tmp1 = explode("|",$tmp['domain_path']);
             $tmparr = [];
-            foreach ($tmp1 as $multidomain_paths){
+            foreach ($tmp1 as $multidomain_paths) {
                 $pos = strpos($multidomain_paths,":");
                 if ($pos>0) $tmparr[substr($multidomain_paths, 0, $pos)] = path_format(substr($multidomain_paths, $pos+1));
             }
@@ -1243,7 +1243,7 @@ function EnvOpt($needUpdate = 0)
         var xhr = new XMLHttpRequest();
         xhr.open("GET", "https://api.github.com/repos/"+document.updateform.auth.value+"/"+document.updateform.project.value+"/branches");
         //xhr.setRequestHeader("User-Agent","qkqpttgf/OfficeAdmin");
-        xhr.onload = function(e){
+        xhr.onload = function(e) {
             console.log(xhr.responseText+","+xhr.status);
             if (xhr.status==200) {
                 document.updateform.branch.options.length=0;
@@ -1256,7 +1256,7 @@ function EnvOpt($needUpdate = 0)
                 alert(xhr.responseText+"\n"+xhr.status);
             }
         }
-        xhr.onerror = function(e){
+        xhr.onerror = function(e) {
             alert("Network Error "+xhr.status);
         }
         xhr.send(null);
@@ -1323,7 +1323,7 @@ function EnvOpt($needUpdate = 0)
         var xhr = new XMLHttpRequest();
         xhr.open("POST", "");
         xhr.setRequestHeader("Content-Type","application/x-www-form-urlencoded;charset=utf-8");
-        xhr.onload = function(e){
+        xhr.onload = function(e) {
             console.log(xhr.responseText+","+xhr.status);
             if (xhr.status==200) {
                 var res = JSON.parse(xhr.responseText);
@@ -1335,7 +1335,7 @@ function EnvOpt($needUpdate = 0)
                 alert(xhr.status+"\n"+xhr.responseText);
             }
         }
-        xhr.onerror = function(e){
+        xhr.onerror = function(e) {
             alert("Network Error "+xhr.status);
         }
         xhr.send("pass=" + sha1(config_f.pass.value + "" + timestamp) + "&config_b=" + b.value + "&timestamp=" + timestamp);
@@ -1366,7 +1366,7 @@ function EnvOpt($needUpdate = 0)
         var xhr = new XMLHttpRequest();
         xhr.open("POST", "");
         xhr.setRequestHeader("Content-Type","application/x-www-form-urlencoded;charset=utf-8");
-        xhr.onload = function(e){
+        xhr.onload = function(e) {
             console.log(xhr.responseText+","+xhr.status);
             if (xhr.status==200) {
                 //var res = JSON.parse(xhr.responseText);
@@ -1375,7 +1375,7 @@ function EnvOpt($needUpdate = 0)
                 alert(xhr.status+"\n"+xhr.responseText);
             }
         }
-        xhr.onerror = function(e){
+        xhr.onerror = function(e) {
             alert("Network Error "+xhr.status);
         }
         xhr.send("pass=" + sha1(config_f.pass.value + "" + timestamp) + "&config_t=" + encodeURIComponent(config_f.config_t.value) + "&config_b=" + b.value + "&timestamp=" + timestamp);
@@ -1637,12 +1637,12 @@ function render_list($drive = null)
     </body>
     <!--<a class="layui-btn layui-btn-primary layui-btn-xs" lay-event="resetpassword">重置密码</a>-->
     <script type="text/html" id="buttons">
-{{# if(d.isGlobalAdmin!=true){}}
+{{# if (d.isGlobalAdmin!=true) { }}
         <a class="layui-btn layui-btn-warm layui-btn-xs" lay-event="setuserasadminbyid">设为管理</a>
 {{# } else { }}
         <a class="layui-btn layui-btn-normal layui-btn-xs" lay-event="deluserasadminbyid">取消管理</a>
 {{# } }}
-{{# if(d.isMe!=true){}}
+{{# if (d.isMe!=true) { }}
         <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
 {{# } }}
     </script>
@@ -1652,7 +1652,7 @@ function render_list($drive = null)
         var licenseObject = ' . json_encode($license) . ';
         var licenseObjectId = ' . json_encode(array_keys($license)) . ';
         var license_exist = ' . json_encode($skus) . ';
-        layui.use([\'table\',\'form\',\'layer\'], function(){
+        layui.use([\'table\',\'form\',\'layer\'], function() {
             var table = layui.table;
             var form = layui.form;
             var layer = layui.layer;';
@@ -1672,50 +1672,48 @@ function render_list($drive = null)
                     //field是取接口的字段值
                     //width是宽度，不填则自动根据值的长度
                     {field:\'displayName\', title: \'displayName\', align: \'center\'},
-                    {field:\'userPrincipalName\', title: \'账号\', align: \'center\', templet: function(d){
-                        /*if(d.userPrincipalName){
+                    {field:\'userPrincipalName\', title: \'账号\', align: \'center\', templet: function(d) {
+                        /*if (d.userPrincipalName) {
                             return d.userPrincipalName;
-                        }else{
+                        } else {
                             return \'-\';
                         }*/
-                        if(d.accountEnabled == true){
+                        if (d.accountEnabled == true) {
                             return d.userPrincipalName;
-                        }else{
+                        } else {
                             return \'<a lay-event="accountactive"><span style="color:red;">\' + d.userPrincipalName + \'</span></a>\';
                         }
                     }},
-                    /*{field:\'id\', title: \'id\', align: \'center\', templet: function(d){
-                        if(d.id){
+                    /*{field:\'id\', title: \'id\', align: \'center\', templet: function(d) {
+                        if (d.id) {
                             return d.id;
-                        }else{
+                        } else {
                             return \'-\';
                         }
                     }},*/
-                    /*{field:\'accountEnabled\', title: \'账户状态\', align: \'center\', templet: function(d){
-                        if(d.accountEnabled == true){
+                    /*{field:\'accountEnabled\', title: \'账户状态\', align: \'center\', templet: function(d) {
+                        if (d.accountEnabled == true) {
                             return \'<span style="color:#99CC00">正常</span>\';
-                        }else{
+                        } else {
                             return \'<span style="color:red;">禁用</span>\';
                         }
                     }},*/
-                    {field:\'accountEnabled\', title: \'账户状态\', width: 95, align: \'center\', templet: function(d){
-                        let s = \'<input value="\' + d.userPrincipalName + \'" lineIndex="\' + d.LAY_TABLE_INDEX + \'" type="checkbox" lay-skin="switch" lay-text="正常|禁用" \';
-                        if(d.accountEnabled == true){
-                            s += \'checked lay-filter="accountinactive"\';
-                        }else{
-                            s += \'lay-filter="accountactive"\';
+                    {field:\'accountEnabled\', title: \'账户状态\', width: 100, align: \'center\', templet: function(d) {
+                        let s = \'<input value="\' + d.userPrincipalName + \'" lineIndex="\' + d.LAY_TABLE_INDEX + \'" type="checkbox" lay-skin="switch" lay-text="正常|禁用" lay-filter="accountactive"\';
+                        if (d.accountEnabled == true) {
+                            s += \' checked\';
                         }
                         s += \'>\';
                         return s;
                     }},
                     {field:\'usageLocation\', title: \'地区\', align: \'center\'},
-                    {field:\'assignedLicenses\', title: \'许可证\', width: 95, align: \'center\', templet: function(d){
+                    {field:\'assignedLicenses\', title: \'许可证\', width: 120, align: \'center\', templet: function(d) {
                         let s = \'<a lay-event="addsubscribe">\';
                         //class="layui-btn layui-btn-primary layui-btn-xs"
-                        if(d.assignedLicenses==""){
+                        if (d.assignedLicenses=="") {
                             s += \'<span style="color:#ff461f">无许可</span>\';
-                        }else{
-                            d.assignedLicenses.forEach(function(i){
+                        } else {
+                            d.assignedLicenses.forEach(function(i) {
                                 if (licenseObjectId.indexOf(i.skuId)>-1) {
                                     s += licenseObject[i.skuId].name + "<br>";
                                 } else {
@@ -1727,28 +1725,28 @@ function render_list($drive = null)
                         s += \'</a>\';
                         return s;
                     }},
-                    /*{field:\'isGlobalAdmin\', title: \'isGlobalAdmin\', align: \'center\',  templet:function(d){
-                        if(d.isGlobalAdmin){
+                    /*{field:\'isGlobalAdmin\', title: \'isGlobalAdmin\', align: \'center\',  templet:function(d) {
+                        if (d.isGlobalAdmin) {
                             return d.isGlobalAdmin;
-                        }else{
+                        } else {
                             return \'-\';
                         }
                     }},*/
                     {field:\'createdDateTime\', title: \'创建时间\', align: \'center\'},
-                    {/*fixed:\'right\',*/title: \'操作\', /*width: 280,width: 220,*/width: 140, align:\'center\', toolbar: \'#buttons\'}
+                    {/*fixed:\'right\',*/title: \'操作\', /*width: 280,width: 220,*/width: 160, align:\'center\', toolbar: \'#buttons\'}
                 ]],
                 done: function (res, curr, count) {
-                    layui.table.cache["table"].forEach(function(i){
+                    layui.table.cache["table"].forEach(function(i) {
                         if (i.isMe==true) $("tr[data-index=" + i.LAY_TABLE_INDEX + "]").attr({"style":"background:#87CEEB"});
                     });
                 }
             });
                //监听
-            table.on(\'tool(table)\', function(obj){
-                if(obj.event === \'del\'){
-                    layer.confirm(\'真的删除 \' + obj.data.userPrincipalName + \' 吗\', function(index){
+            table.on(\'tool(table)\', function(obj) {
+                if (obj.event === \'del\') {
+                    layer.confirm(\'真的删除 \' + obj.data.userPrincipalName + \' 吗\', function(index) {
                         let loadix = layer.load(2);
-                        $.post("?a=admin_delete&account=' . $_SERVER['disktag'] . '",{email:obj.data.userPrincipalName,id:obj.data.id},function(res){
+                        $.post("?a=admin_delete&account=' . $_SERVER['disktag'] . '",{email:obj.data.userPrincipalName,id:obj.data.id},function(res) {
                             if (res.code == 0) {
                                 obj.del();//删除表格这行数据
                             }
@@ -1760,10 +1758,10 @@ function render_list($drive = null)
                         },\'json\');
                     });
                 }
-                /*if(obj.event === \'resetpassword\'){
+                /*if (obj.event === \'resetpassword\') {
                     layer.msg("前面的区域，以后再来探索吧！");return;
-                    layer.confirm(\'重置 \' + obj.data.userPrincipalName + \' 密码?\', function(index){
-                        $.post("?a=admin_resetpassword&account=' . $_SERVER['disktag'] . '",{email:obj.data.userPrincipalName},function(res){
+                    layer.confirm(\'重置 \' + obj.data.userPrincipalName + \' 密码?\', function(index) {
+                        $.post("?a=admin_resetpassword&account=' . $_SERVER['disktag'] . '",{email:obj.data.userPrincipalName},function(res) {
                             if (res.code == 0) {
                                 layer.closeAll();
                                 //table.reload(\'table\');
@@ -1772,12 +1770,12 @@ function render_list($drive = null)
                         },\'json\');
                     });
                 }*/
-                /*if(obj.event === \'accountactive\'){
-                    layer.confirm(\'允许 \' + obj.data.userPrincipalName + \' 登录?\', function(index){
-                        $.post("?a=invitation_code_activeaccount&account=' . $_SERVER['disktag'] . '",{email:obj.data.userPrincipalName},function(res){
+                /*if (obj.event === \'accountactive\') {
+                    layer.confirm(\'允许 \' + obj.data.userPrincipalName + \' 登录?\', function(index) {
+                        $.post("?a=activeaccount&account=' . $_SERVER['disktag'] . '",{email:obj.data.userPrincipalName},function(res) {
                             if (res.code == 0) {
                                 layer.closeAll();
-                                //layui.use(\'table\', function(){
+                                //layui.use(\'table\', function() {
                                 //    var table = layui.table;
                                     table.reload(\'table\', { //表格的id
                                         //url:"?a=getusers&account=' . $_SERVER['disktag'] . '",
@@ -1788,13 +1786,13 @@ function render_list($drive = null)
                         },\'json\');
                     });
                 }*/
-                if(obj.event === \'setuserasadminbyid\'){
-                    layer.confirm(\'设 \' + obj.data.userPrincipalName + \' 为管理?\', function(index){
+                if (obj.event === \'setuserasadminbyid\') {
+                    layer.confirm(\'设 \' + obj.data.userPrincipalName + \' 为管理?\', function(index) {
                         let loadix = layer.load(2);
-                        $.post("?a=invitation_code_setuserasadminbyid&account=' . $_SERVER['disktag'] . '",{id:obj.data.id},function(res){
+                        $.post("?a=setuserasadminbyid&account=' . $_SERVER['disktag'] . '",{id:obj.data.id},function(res) {
                             if (res.code == 0) {
                                 layer.closeAll();
-                                //layui.table.cache["table"].forEach(function(i){
+                                //layui.table.cache["table"].forEach(function(i) {
                                 //    if (i.id==obj.data.id) layui.table.cache["table"][i.LAY_TABLE_INDEX].isGlobalAdmin = true;
                                 //});
                                 table.reload("table");
@@ -1807,13 +1805,13 @@ function render_list($drive = null)
                         },\'json\');
                     });
                 }
-                if(obj.event === \'deluserasadminbyid\'){
-                    layer.confirm(\'取消 \' + obj.data.userPrincipalName + \' 管理?\', function(index){
+                if (obj.event === \'deluserasadminbyid\') {
+                    layer.confirm(\'取消 \' + obj.data.userPrincipalName + \' 管理?\', function(index) {
                         let loadix = layer.load(2);
-                        $.post("?a=invitation_code_deluserasadminbyid&account=' . $_SERVER['disktag'] . '",{id:obj.data.id},function(res){
+                        $.post("?a=deluserasadminbyid&account=' . $_SERVER['disktag'] . '",{id:obj.data.id},function(res) {
                             if (res.code == 0) {
                                 layer.closeAll();
-                                //layui.table.cache["table"].forEach(function(i){
+                                //layui.table.cache["table"].forEach(function(i) {
                                 //    if (i.id==obj.data.id) layui.table.cache["table"][i.LAY_TABLE_INDEX].isGlobalAdmin = false;
                                 //});
                                 table.reload("table");
@@ -1826,11 +1824,11 @@ function render_list($drive = null)
                         },\'json\');
                     });
                 }
-                if(obj.event === \'addsubscribe\'){
+                if (obj.event === \'addsubscribe\') {
                     layer.open({
                         type: 1,
                         title:\'分配订阅\',
-                        end: function(){
+                        end: function() {
                             $(\'#addsubscribe\').hide();
                         },
                         skin: \'layui-layer-rim\', //加上边框
@@ -1841,14 +1839,14 @@ function render_list($drive = null)
                             layero.find(\'input[name=usageLocation]\').val(obj.data.usageLocation);
                             let licenses = new Array();
                             let i = 0;
-                            obj.data.assignedLicenses.forEach(function(d){
+                            obj.data.assignedLicenses.forEach(function(d) {
                                 //console.log(d);
                                 licenses[i] = d.skuId;
                                 i++;
                             });
                             layero.find(\'input[name=assignedLicenses]\').val(JSON.stringify(licenses));
                             $("#license_sku")[0].innerHTML = "";
-                            for (let i in license_exist){
+                            for (let i in license_exist) {
                                 //console.log(license_exist[i]);
                                 let skuname = license_exist[i].name;
                                 if (licenseObjectId.indexOf(i)>-1) skuname = licenseObject[i].name;
@@ -1860,19 +1858,19 @@ function render_list($drive = null)
                     });
                 }
             });
-            $(\'#add_account\').click(function(){
+            $(\'#add_account\').click(function() {
                 layer.open({
                     type: 1,
                     title:\'新建账号\',
-                    end: function(){
+                    end: function() {
                         $(\'#add_account_content\').hide();
-                        },
+                    },
                     skin: \'layui-layer-rim\', //加上边框
                     //area: [\'48rem;\', \'28rem;\'], //宽高
                     content: $(\'#add_account_content\'),
                     success: function(layero, index) {
                         $("#addaccount_sku")[0].innerHTML = "";
-                        for (let i in license_exist){
+                        for (let i in license_exist) {
                             //console.log(license_exist[i]);
                             let skuname = license_exist[i].name;
                             if (licenseObjectId.indexOf(i)>-1) skuname = licenseObject[i].name;
@@ -1883,7 +1881,7 @@ function render_list($drive = null)
                     }
                 });
             });
-            $(\'#submitaccount\').click(function(){
+            $(\'#submitaccount\').click(function() {
                 if ($(\'#add_user\').val()=="") {
                     layer.msg("输入用户名");
                     return false;
@@ -1893,7 +1891,7 @@ function render_list($drive = null)
                     return false;
                 }
                 let skus = new Array();
-                $("input:checkbox[name=\'sku\']:checked").each(function(i){
+                $("input:checkbox[name=\'sku\']:checked").each(function(i) {
                     skus[i] = $(this).val();
                 });
                 var data = {
@@ -1906,11 +1904,11 @@ function render_list($drive = null)
                     location:$(\'#location\').val(),
                     sku:skus,
                 };
-                $.post("?a=admin_add_account&account=' . $_SERVER['disktag'] . '",data,function(res){
+                $.post("?a=admin_add_account&account=' . $_SERVER['disktag'] . '",data,function(res) {
                     let loadix = layer.load(2);
                     //console.log(res.code + res.msg);
                     if (res.code == 0) {
-                        skus.forEach(function(i){
+                        skus.forEach(function(i) {
                             license_exist[i].used++;
                         });
                         let r = JSON.parse(res.msg);
@@ -1947,7 +1945,7 @@ function render_list($drive = null)
                     layer.close(loadix);
                 },\'json\');
             })
-            $(\'#submitaddsubscribe\').click(function(){
+            $(\'#submitaddsubscribe\').click(function() {
                 /*if ($(\'#add_user\').val()=="") {
                     layer.msg("输入用户名");
                     return false;
@@ -1958,7 +1956,7 @@ function render_list($drive = null)
                     return false;
                 }
                 let skus = new Array();
-                $("input:checkbox[name=\'sku1\']:checked").each(function(i){
+                $("input:checkbox[name=\'sku1\']:checked").each(function(i) {
                     skus[i] = $(this).val();
                 });
                 var data = {
@@ -1969,13 +1967,13 @@ function render_list($drive = null)
                 };
                 //console.log(data);
                 let loadix = layer.load(2);
-                $.post("?a=add_subscribe&account=' . $_SERVER['disktag'] . '",data,function(res){
+                $.post("?a=add_subscribe&account=' . $_SERVER['disktag'] . '",data,function(res) {
                     //console.log(res.code + res.msg);
                     if (res.code == 0) {
-                        JSON.parse(data.assignedLicenses).forEach(function(i){
+                        JSON.parse(data.assignedLicenses).forEach(function(i) {
                             license_exist[i].used--;
                         });
-                        skus.forEach(function(i){
+                        skus.forEach(function(i) {
                             license_exist[i].used++;
                         });
                         let r = JSON.parse(res.msg);
@@ -1995,47 +1993,28 @@ function render_list($drive = null)
                     layer.close(loadix);
                 },\'json\');
             });
-            form.on("switch(accountactive)", function(obj){
-                obj.elem.checked = false;
+            form.on("switch(accountactive)", function(obj) {
+                let title, action;
+                let aim = obj.elem.checked;
+                obj.elem.checked = !aim;
                 form.render("checkbox");
-                layer.confirm(\'允许 \' + obj.value + \' 登录?\', function(index){
+                if (aim===true) {
+                    title = "允许 " + obj.value + " 登录?";
+                    action = "activeaccount";
+                } else {
+                    title = "禁止 " + obj.value + " 登录?";
+                    action = "inactiveaccount";
+                }
+                layer.confirm(title, function(index) {
                     let loadix = layer.load(2, {shade: [0.1,"#fff"]});
-                    $.post("?a=invitation_code_activeaccount&account=' . $_SERVER['disktag'] . '",{email:obj.value},function(res){
+                    $.post("?a=" + action + "&account=' . $_SERVER['disktag'] . '",{email:obj.value},function(res) {
                         if (res.code == 0) {
                             layer.closeAll();
-                            //obj.elem.checked = true;
+                            obj.elem.checked = aim;
                             //obj.elem.setAttribute("lay-filter", "accountinactive");
-                            //layui.table.cache["table"][obj.elem.getAttribute("lineIndex")].accountEnabled = true;
-                            //form.render("checkbox");
-                            table.reload("table");
-                        }
-                        layer.close(loadix);
-                        layer.msg(res.msg);
-                        if (res.code == 2) {
-                            window.location.reload(); //登录过期
-                        }
-                    },\'json\');
-                });
-            });
-            form.on("switch(accountinactive)", function(obj){
-                obj.elem.checked = true;
-                form.render("checkbox");
-                //console.log(obj.elem.checked);
-                //console.log(obj.elem.getAttribute("account"));
-                //console.log(obj.elem.checked);
-                //console.log(obj);
-                //console.log(this.checked);
-                //console.log(layui.table);
-                //console.log(layui.table.cache["table"]);
-                //layui.table.cache["table"][this.getAttribute("lineIndex")].isGlobalAdmin = true;
-                //let d = layui.table.cache["table"][this.getAttribute("lineIndex")];
-                layer.confirm(\'禁止 \' + obj.value + \' 登录?\', function(index){
-                    let loadix = layer.load(2);
-                    $.post("?a=invitation_code_inactiveaccount&account=' . $_SERVER['disktag'] . '",{email:obj.value},function(res){
-                        if (res.code == 0) {
-                            layer.closeAll();
-                            //layui.table.cache["table"][obj.elem.getAttribute("lineIndex")].accountEnabled = false;
-                            table.reload("table");
+                            layui.table.cache["table"][obj.elem.getAttribute("lineIndex")].accountEnabled = aim;
+                            form.render("checkbox");
+                            //table.reload("table");
                         }
                         layer.close(loadix);
                         layer.msg(res.msg);
@@ -2058,19 +2037,19 @@ function render_list($drive = null)
                 $(\'#account\').val("' . $_SERVER['disktag'] . '");
                 form.render("select");
                 if (account!="' . $_SERVER['disktag'] . '") {
-                    layer.confirm(\'确认切换 \' + text + \' 全局?\', function(index){
+                    layer.confirm(\'确认切换 \' + text + \' 全局?\', function(index) {
                         location.href = "?account=" + account;
                     });
                 }
             });
-                /*$(\'#change_account\').click(function(){
-                    layer.confirm(\'确认切换全局?\', function(index){
+                /*$(\'#change_account\').click(function() {
+                    layer.confirm(\'确认切换全局?\', function(index) {
                         var account = $(\'#account\').val();
                         location.href = "?account=" + account;
                     });
                 });*/
-            $(\'#logout\').click(function(){
-                layer.confirm(\'确认注销登录?\', function(index){
+            $(\'#logout\').click(function() {
+                layer.confirm(\'确认注销登录?\', function(index) {
                     var expd = new Date();
                     expd.setTime(expd.getTime()+1000);
                     var expires = "expires="+expd.toGMTString();
@@ -2078,7 +2057,7 @@ function render_list($drive = null)
                     window.location.reload();
                 });
             });
-            $(\'#setup\').click(function(){
+            $(\'#setup\').click(function() {
                 location.href = "?setup";
             });
         });
