@@ -1474,7 +1474,7 @@ function render_list($drive = null)
         $html .= '
                 <div class="layui-inline" style="margin-left: 2rem;">
                     <select name="account" id="account" lay-filter="account">
-                        <option value="">Account Select</option>';
+                        <option value="">Select Account</option>';
         foreach ($disktags as $disktag) {
             if ($disktag!='') {
                 $diskname = getConfig('diskname', $disktag);
@@ -1499,7 +1499,7 @@ function render_list($drive = null)
             </blockquote>
         </div>';
     if ($_SERVER['disktag']=='') {
-        $html .= 'Select an Account';
+        $html .= '<span style="text-align: center;display:block;">Select an Account</span>';
     } elseif ($driveok) {
         $html .= '
         <table class="layui-hide" id="table" lay-filter="table">
@@ -1883,11 +1883,13 @@ function render_list($drive = null)
             });
             $(\'#submitaccount\').click(function() {
                 if ($(\'#add_user\').val()=="") {
-                    layer.msg("输入用户名");
+                    //layer.msg("输入用户名");
+                    layer.tips("输入用户名", "#add_user");
                     return false;
                 }
                 if ($(\'#location\').val()=="") {
-                    layer.msg("选择地区");
+                    //layer.msg("选择地区");
+                    layer.tips("选择地区", "#location");
                     return false;
                 }
                 let skus = new Array();
@@ -2064,7 +2066,9 @@ function render_list($drive = null)
                 });
             });
             $(\'#setup\').click(function() {
-                location.href = "?setup";
+                layer.confirm(\'进入后台管理?\', function(index) {
+                    location.href = "?setup";
+                });
             });
         });
     </script>
