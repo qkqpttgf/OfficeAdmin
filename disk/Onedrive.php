@@ -52,6 +52,13 @@ class Onedrive {
         $result = $this->MSAPI('GET', $url, '', $h);
         return $result['body'];
     }
+    public function searchuser($seachStr) {
+        $url='/v1.0/users?$search="userPrincipalName:' . $seachStr . '"&$count=true&$select=displayName,accountEnabled,usageLocation,id,userPrincipalName,createdDateTime,assignedLicenses';
+        //$url='/v1.0/users?$search="displayName:' . $seachStr . '" OR "userPrincipalName:' . $seachStr . '"&$count=true';
+        $h['ConsistencyLevel'] = 'eventual';
+        $result = $this->MSAPI('GET', $url, '', $h);
+        return $result;
+    }
     private function getusersStartEnd($start = 0) {
         //error_log1('start=' . $start . ' end=' . $end);
         $pagesize = 900;
@@ -80,6 +87,7 @@ class Onedrive {
                 $j++;
             }
             $data['value'] = $tmp;
+            $data['@odata.count'] = $this->getuserscounts();
             $result['body'] = json_encode($data);
             return $result;
         }
