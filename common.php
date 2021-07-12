@@ -587,7 +587,11 @@ function adminoperate()
 
     if ($_GET['a'] == 'getusers') {
         //$data = $drive->getusers();
-        $data = $drive->getusers($_GET['page'], $_GET['limit']);
+        if (isset($_GET['search']) && $_GET['search']!='') {
+            $data = $drive->searchuser($_GET['search']);
+        } else {
+            $data = $drive->getusers($_GET['page'], $_GET['limit']);
+        }
         //error_log1(json_encode($data));
         if ($data['stat']!=200) return output(response(1,"Error",json_encode($data)));
         $getGlobalAdmins = $drive->getGlobalAdmins();
@@ -603,7 +607,8 @@ function adminoperate()
             if ($v['userPrincipalName']==$me) $value[$k]['isMe'] = true;
             else $value[$k]['isMe'] = false;
         }
-        $counts = $drive->getuserscounts();
+        //$counts = $drive->getuserscounts();
+        $counts = $result['@odata.count'];
 
         return output(response(0, "获取成员信息成功", $value, $counts));
     }
@@ -1463,16 +1468,13 @@ function render_list($drive = null)
     </head>
     <body class="layui-layout-body" style="overflow-y:visible;background: #fff;">
         <div class="layui-form">
-            <blockquote class="layui-elem-quote quoteBox">';
-    if ($driveok) {
-        $html .= '
-                <div class="layui-inline" style="margin-left: 2rem;">
-                    <a class="layui-btn" id="add_account"><i class="layui-icon layui-icon-username"></i> 新建用户</a>
+            <blockquote class="layui-elem-quote quoteBox">
+                <div class="layui-inline">
+                    <a class="layui-btn" id="Operate"><i class="layui-icon layui-icon-set"></i> 管理</a>
                 </div>';
-    }
     if ($disktags) {
         $html .= '
-                <div class="layui-inline" style="margin-left: 2rem;">
+                <div class="layui-inline">
                     <select name="account" id="account" lay-filter="account">
                         <option value="">Select Account</option>';
         foreach ($disktags as $disktag) {
@@ -1489,13 +1491,19 @@ function render_list($drive = null)
                     <a class="layui-btn" id="change_account"><i class="layui-icon layui-icon-template-1"></i> 切换全局</a>
                 </div>-->';
     }
+    if ($driveok) {
+        $html .= '
+                <div class="layui-inline">
+                    <a class="layui-btn" id="add_account"><i class="layui-icon layui-icon-username"></i> 新建用户</a>
+                </div>
+                <div class="layui-inline">
+                    <input type="text" class="layui-input" id="search_t" name="search_t" required lay-verify="required">
+                </div>
+                <div class="layui-inline">
+                    <button class="layui-btn" lay-filter="search_b" id="search_b" type="button">搜索</button>
+                </div>';
+    }
     $html .= '
-                <div class="layui-inline" style="margin-left: 2rem;">
-                    <a class="layui-btn" id="setup"><i class="layui-icon layui-icon-set"></i> 后台管理</a>
-                </div>
-                <div class="layui-inline" style="margin-left: 2rem;">  
-                    <a class="layui-btn" id="logout"><i class="layui-icon layui-icon-logout"></i> 注销登录</a>
-                </div>
             </blockquote>
         </div>';
     if ($_SERVER['disktag']=='') {
@@ -1604,11 +1612,13 @@ function render_list($drive = null)
             </form>
         </div>';
         $html .= '
-        <div id="addsubscribe" class="layui-form layui-form-pane" style="display: none;margin:1rem 3rem;">
+        <div id="addsubscribe" class="layui-form layui-form-pane" style="display: none;">
             <form class="layui-form">
-                <input type="hidden" class="layui-input" id="user_email" name="user_email" required lay-verify="required">
-                <input type="hidden" class="layui-input" id="usageLocation" name="usageLocation" required lay-verify="required">
-                <input type="hidden" class="layui-input" id="assignedLicenses" name="assignedLicenses" required lay-verify="required">
+                <div class="layui-form-item">
+                    <input type="hidden" id="user_email" name="user_email" required lay-verify="required">
+                    <input type="hidden" id="usageLocation" name="usageLocation" required lay-verify="required">
+                    <input type="hidden" id="assignedLicenses" name="assignedLicenses" required lay-verify="required">
+                </div>
                 <div class="layui-form-item">
                     <label class="layui-form-label">许可证</label>
                     <div class="layui-input-inline" id="license_sku">';
@@ -1632,6 +1642,15 @@ function render_list($drive = null)
                 </div>
             </form>
         </div>';
+        $html .= '
+        <!--<div id="search" class="layui-form layui-form-pane" style="display: none;">
+            <form class="layui-form">
+                <div class="layui-form-item">
+                    <input type="text" id="search_t" name="search_t" required lay-verify="required">
+                    <button class="layui-btn" lay-filter="search_b" id="search_b" type="button">立即提交</button>
+                </div>
+            </form>
+        </div>-->';
     }
     $html .= '
     </body>
@@ -1652,10 +1671,41 @@ function render_list($drive = null)
         var licenseObject = ' . json_encode($license) . ';
         var licenseObjectId = ' . json_encode(array_keys($license)) . ';
         var license_exist = ' . json_encode($skus) . ';
-        layui.use([\'table\',\'form\',\'layer\'], function() {
+        layui.use([\'table\',\'form\',\'layer\',"dropdown"], function() {
             var table = layui.table;
             var form = layui.form;
-            var layer = layui.layer;';
+            var layer = layui.layer;
+            var dropdown = layui.dropdown;
+            dropdown.render({
+                elem: "#Operate"
+                ,data: [{
+                    title: "setup"
+                    ,id: 100
+                    ,templet: "<a><i class=\"layui-icon layui-icon-set\"></i> 后台管理</a>"
+                },{
+                    title: "logout"
+                    ,id: 101
+                    ,templet: "<a><i class=\"layui-icon layui-icon-logout\"></i> 注销登录</a>"
+                }]
+                ,click: function(obj){
+                    //console.log(obj); console.log(this);
+                    if (obj.title=="logout") {
+                        layer.confirm(\'确认注销登录?\', function(index) {
+                            var expd = new Date();
+                            expd.setTime(expd.getTime()+1000);
+                            var expires = "expires="+expd.toGMTString();
+                            document.cookie = "admin=; path=/; "+expires;
+                            window.location.reload();
+                        });
+                    }
+                    if (obj.title=="setup") {
+                        layer.confirm(\'进入后台管理?\', function(index) {
+                            location.href = "?setup";
+                        });
+                    }
+                    //layer.tips("点击了："+ obj.title, this.elem, {tips: [1, "#5FB878"]})
+                }
+            });';
     if ($driveok) $html .= '
             var tableRender = table.render({
                 elem: \'#table\',//表格id
@@ -2031,6 +2081,11 @@ function render_list($drive = null)
                         }
                     },\'json\');
                 });
+            });
+            $(\'#search_b\').click(function() {
+                table.reload("table",{
+                    url:"?a=getusers&account=' . $_SERVER['disktag'] . '&search=" + $(\'#search_t\').val(),
+                });
             });';
     $html .= '
             form.on(\'select(account)\', function (data) {
@@ -2049,26 +2104,6 @@ function render_list($drive = null)
                         location.href = "?account=" + account;
                     });
                 }
-            });
-                /*$(\'#change_account\').click(function() {
-                    layer.confirm(\'确认切换全局?\', function(index) {
-                        var account = $(\'#account\').val();
-                        location.href = "?account=" + account;
-                    });
-                });*/
-            $(\'#logout\').click(function() {
-                layer.confirm(\'确认注销登录?\', function(index) {
-                    var expd = new Date();
-                    expd.setTime(expd.getTime()+1000);
-                    var expires = "expires="+expd.toGMTString();
-                    document.cookie = "admin=; path=/; "+expires;
-                    window.location.reload();
-                });
-            });
-            $(\'#setup\').click(function() {
-                layer.confirm(\'进入后台管理?\', function(index) {
-                    location.href = "?setup";
-                });
             });
         });
     </script>
