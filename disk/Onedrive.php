@@ -87,7 +87,6 @@ class Onedrive {
                 $j++;
             }
             $data['value'] = $tmp;
-            $data['@odata.count'] = $this->getuserscounts();
             $result['body'] = json_encode($data);
             return $result;
         }
@@ -96,7 +95,7 @@ class Onedrive {
         if ($page>1) {
             $url='/v1.0/users/?';
             if ($page*$limit>999) {
-                return $this->getusersStartEnd(($page-1)*$limit);
+                $result = $this->getusersStartEnd(($page-1)*$limit);
             } else {
                 if (!$limit) $limit = 100;
                 $url .= '$top=' . $page * $limit . '&';
@@ -111,18 +110,7 @@ class Onedrive {
                 }
                 $data['value'] = $tmp;
                 $result['body'] = json_encode($data);
-                return $result;
             }
-            if (!($link = getcache('limit_' . $limit . '_page_' . ($page-1) . '_nextlink', $this->disktag))) {
-                $result = $this->getusers(($page-1), $limit);
-                $link = json_decode($result['body'], true)['@odata.nextLink'];
-            }
-            //error_log1('link=' . $link);
-            $result = $this->MSAPI('GET', $link);
-            if ($result['stat']!=200) return $result;
-            $data = json_decode($result['body'], true);
-            if (isset($data['@odata.nextLink'])) savecache('limit_' . $limit . '_page_' . $page . '_nextlink', $data['@odata.nextLink'], $this->disktag);
-            return $result;
         } else {
             $page = 1;
             $url='/v1.0/users/?';
@@ -132,8 +120,11 @@ class Onedrive {
             if ($result['stat']!=200) return $result;
             $data = json_decode($result['body'], true);
             if (isset($data['@odata.nextLink'])) savecache('limit_' . $limit . '_page_' . $page . '_nextlink', $data['@odata.nextLink'], $this->disktag);
-            return $result;
         }
+        $data = json_decode($result['body'], true);
+        $data['@odata.count'] = $this->getuserscounts();
+        $result['body'] = json_encode($data);
+        return $result;
     }
     public function getGlobalAdmins() {
         if (!($GlobalAdmins=getcache('GlobalAdmins', $this->disktag))) {
