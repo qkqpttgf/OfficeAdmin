@@ -1615,6 +1615,7 @@ function render_list($drive = null)
         <div id="addsubscribe" class="layui-form layui-form-pane" style="display: none;">
             <form class="layui-form">
                 <div class="layui-form-item">
+                    <input type="hidden" id="lineIndex" name="lineIndex" required lay-verify="required">
                     <input type="hidden" id="user_email" name="user_email" required lay-verify="required">
                     <input type="hidden" id="usageLocation" name="usageLocation" required lay-verify="required">
                     <input type="hidden" id="assignedLicenses" name="assignedLicenses" required lay-verify="required">
@@ -1654,13 +1655,13 @@ function render_list($drive = null)
     }
     $html .= '
     </body>
-    <!--<a class="layui-btn layui-btn-primary layui-btn-xs" lay-event="resetpassword">重置密码</a>-->
-    <script type="text/html" id="buttons">
+    <!--<a class="layui-btn layui-btn-primary layui-btn-xs" lay-event="resetpassword">重置密码</a>
 {{# if (d.isGlobalAdmin!=true) { }}
         <a class="layui-btn layui-btn-warm layui-btn-xs" lay-event="setuserasadminbyid">设为管理</a>
 {{# } else { }}
         <a class="layui-btn layui-btn-normal layui-btn-xs" lay-event="deluserasadminbyid">取消管理</a>
-{{# } }}
+{{# } }}-->
+    <script type="text/html" id="buttons">
 {{# if (d.isMe!=true) { }}
         <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
 {{# } }}
@@ -1721,7 +1722,15 @@ function render_list($drive = null)
                     //title是这列的标题
                     //field是取接口的字段值
                     //width是宽度，不填则自动根据值的长度
-                    {field:\'displayName\', title: \'displayName\', align: \'center\'},
+                    {field:\'isGlobalAdmin\', title: \'是全局\', width: 100, align: \'center\',  templet:function(d) {
+                        let s = \'<input value="\' + d.userPrincipalName + \'" lineIndex="\' + d.LAY_TABLE_INDEX + \'" type="checkbox" lay-skin="switch" lay-text="全局|普通" lay-filter="setuserasadmin"\';
+                        if (d.isGlobalAdmin == true) {
+                            s += \' checked\';
+                        }
+                        s += \'>\';
+                        return s;
+                    }},
+                    {field:\'displayName\', title: \'名称\', align: \'center\'},
                     {field:\'userPrincipalName\', title: \'账号\', align: \'center\', templet: function(d) {
                         /*if (d.userPrincipalName) {
                             return d.userPrincipalName;
@@ -1758,7 +1767,7 @@ function render_list($drive = null)
                     }},
                     {field:\'usageLocation\', title: \'地区\', align: \'center\'},
                     {field:\'assignedLicenses\', title: \'许可证\', width: 120, align: \'center\', templet: function(d) {
-                        let s = \'<a lay-event="addsubscribe">\';
+                        let s = \'<a lay-event="addsubscribe" lineIndex="\' + d.LAY_TABLE_INDEX + \'">\';
                         //class="layui-btn layui-btn-primary layui-btn-xs"
                         if (d.assignedLicenses=="") {
                             s += \'<span style="color:#ff461f">无许可</span>\';
@@ -1775,15 +1784,8 @@ function render_list($drive = null)
                         s += \'</a>\';
                         return s;
                     }},
-                    /*{field:\'isGlobalAdmin\', title: \'isGlobalAdmin\', align: \'center\',  templet:function(d) {
-                        if (d.isGlobalAdmin) {
-                            return d.isGlobalAdmin;
-                        } else {
-                            return \'-\';
-                        }
-                    }},*/
                     {field:\'createdDateTime\', title: \'创建时间\', align: \'center\'},
-                    {/*fixed:\'right\',*/title: \'操作\', /*width: 280,width: 220,*/width: 160, align:\'center\', toolbar: \'#buttons\'}
+                    {/*fixed:\'right\',*/title: \'操作\', width: 100, align:\'center\', toolbar: \'#buttons\'}
                 ]],
                 done: function (res, curr, count) {
                     layui.table.cache["table"].forEach(function(i) {
@@ -1836,44 +1838,6 @@ function render_list($drive = null)
                         },\'json\');
                     });
                 }*/
-                if (obj.event === \'setuserasadminbyid\') {
-                    layer.confirm(\'设 \' + obj.data.userPrincipalName + \' 为管理?\', function(index) {
-                        let loadix = layer.load(2);
-                        $.post("?a=setuserasadminbyid&account=' . $_SERVER['disktag'] . '",{id:obj.data.id},function(res) {
-                            if (res.code == 0) {
-                                layer.closeAll();
-                                //layui.table.cache["table"].forEach(function(i) {
-                                //    if (i.id==obj.data.id) layui.table.cache["table"][i.LAY_TABLE_INDEX].isGlobalAdmin = true;
-                                //});
-                                table.reload("table");
-                            }
-                            layer.close(loadix);
-                            layer.msg(res.msg);
-                            if (res.code == 2) {
-                                window.location.reload(); //登录过期
-                            }
-                        },\'json\');
-                    });
-                }
-                if (obj.event === \'deluserasadminbyid\') {
-                    layer.confirm(\'取消 \' + obj.data.userPrincipalName + \' 管理?\', function(index) {
-                        let loadix = layer.load(2);
-                        $.post("?a=deluserasadminbyid&account=' . $_SERVER['disktag'] . '",{id:obj.data.id},function(res) {
-                            if (res.code == 0) {
-                                layer.closeAll();
-                                //layui.table.cache["table"].forEach(function(i) {
-                                //    if (i.id==obj.data.id) layui.table.cache["table"][i.LAY_TABLE_INDEX].isGlobalAdmin = false;
-                                //});
-                                table.reload("table");
-                            }
-                            layer.close(loadix);
-                            layer.msg(res.msg);
-                            if (res.code == 2) {
-                                window.location.reload(); //登录过期
-                            }
-                        },\'json\');
-                    });
-                }
                 if (obj.event === \'addsubscribe\') {
                     layer.open({
                         type: 1,
@@ -1885,6 +1849,11 @@ function render_list($drive = null)
                         //area: [\'48rem;\', \'28rem;\'], //宽高
                         content: $(\'#addsubscribe\'),
                         success: function(layero, index) {
+                            let lineIndex = obj.tr.selector;
+                            lineIndex = lineIndex.substr(lineIndex.indexOf("=")+2);
+                            lineIndex = lineIndex.substr(0, lineIndex.indexOf("\""));
+                            //console.log(lineIndex);
+                            layero.find(\'input[name=lineIndex]\').val(lineIndex);
                             layero.find(\'input[name=user_email]\').val(obj.data.userPrincipalName);
                             layero.find(\'input[name=usageLocation]\').val(obj.data.usageLocation);
                             let licenses = new Array();
@@ -2031,7 +2000,28 @@ function render_list($drive = null)
                         let r = JSON.parse(res.msg);
                         layer.msg(r.msg);
                         layer.closeAll();
-                        table.reload(\'table\');
+                        //table.reload(\'table\');
+                        let lineIndex = $(\'#lineIndex\').val();
+                        let tmpa = new Array();
+                        //let s = \'<a lay-event="addsubscribe" lineIndex="\' + lineIndex + \'">\';
+                        let s = "";
+                        if (skus=="") {
+                            s += \'<span style="color:#ff461f">无许可</span>\';
+                        } else {
+                            skus.forEach(function(i) {
+                                if (licenseObjectId.indexOf(i)>-1) {
+                                    s += licenseObject[i].name + "<br>";
+                                } else {
+                                    s += i + "<br>";
+                                }
+                                tmpa.push({skuId : i});
+                            })
+                            //s = s.substr(0, s.length-4);
+                        }
+                        //s += \'</a>\';
+                        //console.log(tmpa);
+                        layui.table.cache["table"][lineIndex].assignedLicenses = tmpa;
+                        document.querySelectorAll("td[data-field=\'assignedLicenses\'] div a")[lineIndex].innerHTML = s;
                     } else {
                         layer.msg(res.msg);
                         if (res.code == 2) {
@@ -2073,6 +2063,36 @@ function render_list($drive = null)
                             } else {
                                 document.querySelector("td[data-content=\'" + obj.elem.value + "\'] div").innerHTML = "<span style=\"color:red;\">" + obj.elem.value + "</span>";
                             }
+                        }
+                        layer.close(loadix);
+                        layer.msg(res.msg);
+                        if (res.code == 2) {
+                            window.location.reload(); //登录过期
+                        }
+                    },\'json\');
+                });
+            });
+            form.on("switch(setuserasadmin)", function(obj) {
+                let title, action;
+                let aim = obj.elem.checked;
+                obj.elem.checked = !aim;
+                form.render("checkbox");
+                if (aim===true) {
+                    title = "设 " + obj.value + " 为管理?";
+                    action = "setuserasadminbyid";
+                } else {
+                    title = "取消 " + obj.value + " 管理?";
+                    action = "deluserasadminbyid";
+                }
+                //console.log(document.querySelector("td[data-content=\'" + obj.elem.value + "\'] div") );
+                layer.confirm(title, function(index) {
+                    let loadix = layer.load(2, {shade: [0.1,"#fff"]});
+                    $.post("?a=" + action + "&account=' . $_SERVER['disktag'] . '",{id:layui.table.cache["table"][obj.elem.getAttribute("lineIndex")].id},function(res) {
+                        if (res.code == 0) {
+                            layer.closeAll();
+                            obj.elem.checked = aim;
+                            layui.table.cache["table"][obj.elem.getAttribute("lineIndex")].isGlobalAdmin = aim;
+                            form.render("checkbox");
                         }
                         layer.close(loadix);
                         layer.msg(res.msg);
