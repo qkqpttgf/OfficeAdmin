@@ -1446,10 +1446,8 @@ function render_list($drive = null)
 {
     global $constStr;
     global $license;
-    //echo "r:" . $drive->disktag . PHP_EOL;
     $driveok = driveisfine($drive);
     $disktags = explode('|', getConfig('disktag'));
-    //echo "d:" . json_encode($disktags) . PHP_EOL;
     $html = '
 <!DOCTYPE html>
 <html>
@@ -1470,7 +1468,7 @@ function render_list($drive = null)
         <div class="layui-form">
             <blockquote class="layui-elem-quote quoteBox">
                 <div class="layui-inline">
-                    <a class="layui-btn" id="Operate"><i class="layui-icon layui-icon-set"></i> 管理</a>
+                    <a class="layui-btn" id="Operate"><i class="layui-icon layui-icon-more-vertical"></i> 菜单</a>
                 </div>';
     if ($disktags) {
         $html .= '
@@ -1494,10 +1492,10 @@ function render_list($drive = null)
     if ($driveok) {
         $html .= '
                 <div class="layui-inline">
-                    <a class="layui-btn" id="add_account"><i class="layui-icon layui-icon-username"></i> 新建用户</a>
+                    <a class="layui-btn" id="add_account"><i class="layui-icon layui-icon-addition"></i> 新建用户</a>
                 </div>
                 <div class="layui-inline">
-                    <input type="text" class="layui-input" id="search_t" name="search_t" required lay-verify="required">
+                    <input type="text" placeholder="&#xe615;" class="layui-input layui-icon" id="search_t" name="search_t" required lay-verify="required">
                 </div>
                 <div class="layui-inline">
                     <button class="layui-btn" lay-filter="search_b" id="search_b" type="button">搜索</button>
@@ -1655,16 +1653,19 @@ function render_list($drive = null)
     }
     $html .= '
     </body>
-    <!--<a class="layui-btn layui-btn-primary layui-btn-xs" lay-event="resetpassword">重置密码</a>
+<!--
+        <a class="layui-btn layui-btn-primary layui-btn-xs" lay-event="resetpassword">重置密码</a>
 {{# if (d.isGlobalAdmin!=true) { }}
         <a class="layui-btn layui-btn-warm layui-btn-xs" lay-event="setuserasadminbyid">设为管理</a>
 {{# } else { }}
         <a class="layui-btn layui-btn-normal layui-btn-xs" lay-event="deluserasadminbyid">取消管理</a>
-{{# } }}-->
-    <script type="text/html" id="buttons">
-{{# if (d.isMe!=true) { }}
-        <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
 {{# } }}
+{{# if (d.isMe==true) { }}
+    <i class="layui-icon layui-icon-username"></i>
+{{# } }}
+-->
+    <script type="text/html" id="buttons">
+        <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del"><i class="layui-icon layui-icon-delete"></i> 删除</a>
     </script>
     <script src="https://www.layuicdn.com/layui-v2.6.8/layui.js"></script>
     <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.6.0/jquery.js"></script>
@@ -1768,7 +1769,6 @@ function render_list($drive = null)
                     {field:\'usageLocation\', title: \'地区\', align: \'center\'},
                     {field:\'assignedLicenses\', title: \'许可证\', width: 120, align: \'center\', templet: function(d) {
                         let s = \'<a lay-event="addsubscribe" lineIndex="\' + d.LAY_TABLE_INDEX + \'">\';
-                        //class="layui-btn layui-btn-primary layui-btn-xs"
                         if (d.assignedLicenses=="") {
                             s += \'<span style="color:#ff461f">无许可</span>\';
                         } else {
@@ -1779,7 +1779,6 @@ function render_list($drive = null)
                                     s += i.skuId + "<br>";
                                 }
                             })
-                            //s = s.substr(0, s.length-4);
                         }
                         s += \'</a>\';
                         return s;
@@ -1789,7 +1788,10 @@ function render_list($drive = null)
                 ]],
                 done: function (res, curr, count) {
                     layui.table.cache["table"].forEach(function(i) {
-                        if (i.isMe==true) $("tr[data-index=" + i.LAY_TABLE_INDEX + "]").attr({"style":"background:#87CEEB"});
+                        if (i.isMe==true) {
+                            $("tr[data-index=" + i.LAY_TABLE_INDEX + "]").attr({"style":"background:#87CEEB"});
+                            //document.querySelectorAll("a[lay-event=\'del\']")[i.LAY_TABLE_INDEX].setAttribute("class", "layui-btn layui-btn-primary layui-btn-xs");
+                        }
                     });
                 }
             });
