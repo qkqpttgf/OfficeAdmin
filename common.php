@@ -1848,7 +1848,7 @@ function render_list($drive = null)
                             $(\'#addsubscribe\').hide();
                         },
                         skin: \'layui-layer-rim\', //加上边框
-                        //area: [\'48rem;\', \'28rem;\'], //宽高
+                        area: [\'80%\', \'80%\'], //宽高
                         content: $(\'#addsubscribe\'),
                         success: function(layero, index) {
                             let lineIndex = obj.tr.selector;
@@ -1887,7 +1887,7 @@ function render_list($drive = null)
                         $(\'#add_account_content\').hide();
                     },
                     skin: \'layui-layer-rim\', //加上边框
-                    //area: [\'48rem;\', \'28rem;\'], //宽高
+                    area: [\'80%\', \'80%\'], //宽高
                     content: $(\'#add_account_content\'),
                     success: function(layero, index) {
                         $("#addaccount_sku")[0].innerHTML = "";
