@@ -9,20 +9,24 @@ class Onedrive {
         $this->redirect_uri = 'https://scfonedrive.github.io';
         $this->oauth_url = 'https://login.microsoftonline.com/common/oauth2/v2.0/';
         $this->api_url = 'https://graph.microsoft.com';
-        $this->scope = 'https://graph.microsoft.com/Application.ReadWrite.All https://graph.microsoft.com/Directory.ReadWrite.All https://graph.microsoft.com/User.ReadWrite.All https://graph.microsoft.com/RoleManagement.ReadWrite.Directory https://graph.microsoft.com/Directory.ReadWrite.All offline_access';
-        $this->scope = urlencode($this->scope);
+        $default_client_id = '734ef928-d74c-4555-8d1b-d942fa0a1a41';
+        $default_client_secret = '_I5gOpmG5vTC2Ts_K._wCW4nN1km~4Pk52';
+        $default_scope = $this->api_url . '/Application.ReadWrite.All ' . $this->api_url . '/Directory.AccessAsUser.All offline_access';
         if ($tag!='') {
-            if (isset($_GET['AddDisk'])) {
-                $this->client_id = '734ef928-d74c-4555-8d1b-d942fa0a1a41';
-                $this->client_secret = '_I5gOpmG5vTC2Ts_K._wCW4nN1km~4Pk52';
+            if (isset($_GET['AddDisk'])||(isset($_GET['a'])&&$_GET['a']==='admin_resetpassword')) {
+                $this->client_id = $default_client_id;
+                $this->client_secret = $default_client_secret;
+                $this->scope = $default_scope;
             } else {
                 $this->client_id = getConfig('client_id', $tag);
                 $this->client_secret = getConfig('client_secret', $tag);
+                $this->scope = $this->api_url . '/.default';
             }
             $this->client_secret = urlencode($this->client_secret);
             $this->tenant_id = getConfig('tenant_id', $tag);
             $this->oauth_url1 = 'https://login.microsoftonline.com/' . $this->tenant_id . '/oauth2/v2.0/token';
-            //$res = $this->get_access_token1(getConfig('refresh_token', $tag));
+            $this->scope = urlencode($this->scope);
+            if (getConfig('refresh_token', $tag)) $res = $this->get_access_token1(getConfig('refresh_token', $tag), $default_client_id, $default_client_secret);
             $res = $this->get_access_token();
         }
     }
@@ -198,6 +202,7 @@ class Onedrive {
         return $this->MSAPI('DELETE', $url);
     }
     public function resetpassword ($user_email, $password){
+        $res = $this->get_access_token1(getConfig('refresh_token', $this->disktag));
         $url="/v1.0/users/" . $user_email;
         $data['passwordProfile']['password'] = $password;
         $data['passwordProfile']['forceChangePasswordNextSignIn'] = false;
@@ -403,7 +408,7 @@ class Onedrive {
                 $title = 'Error';
                 return message($html, $title, 201);
             } else {
-                $str .= '<meta http-equiv="refresh" content="5;URL=' . $url . '?setup&disktag=' . $_POST['disktag_add'] . '">
+                $str .= '<meta http-equiv="refresh" content="5;URL=' . $url . '?setup&disktag=' . $_GET['disktag'] . '">
                 tenant_id: ' . $tmp['tenant_id'] . '<br>
                 client_secret: ' . $client_secret . '<br>';
                 //$str = json_encode(json_decode($arr['body'], true), JSON_PRETTY_PRINT);
@@ -615,8 +620,7 @@ class Onedrive {
     protected function get_access_token() {
         if (!($this->access_token = getcache('access_token', $this->disktag))) {
             $url = $this->oauth_url1;
-            $scope = $this->api_url . '/.default';
-            $data = 'grant_type=client_credentials&client_id=' . $this->client_id . '&client_secret=' . $this->client_secret . '&scope=' . $scope;
+            $data = 'grant_type=client_credentials&client_id=' . $this->client_id . '&client_secret=' . $this->client_secret . '&scope=' . $this->scope;
             $p=0;
             while ($response['stat']==0&&$p<3) {
                 $response = curl('POST', $url, $data);
@@ -640,22 +644,24 @@ class Onedrive {
         }
         return true;
     }
-    protected function get_access_token1($refresh_token) {
+    protected function get_access_token1($refresh_token, $client_id = '', $client_secret = '') {
         if (!$refresh_token) {
             $tmp['stat'] = 0;
             $tmp['body'] = 'No refresh_token';
             $this->error = $tmp;
             return false;
         }
+        if (!$client_id) $client_id = $this->client_id;
+        if (!$client_secret) $client_secret = $this->client_secret;
         if (!($this->access_token = getcache('tmp_access_token', $this->disktag))) {
             $p=0;
             while ($response['stat']==0&&$p<3) {
-                $response = curl('POST', $this->oauth_url . 'token', 'client_id=' . $this->client_id . '&client_secret=' . $this->client_secret . '&grant_type=refresh_token&requested_token_use=on_behalf_of&refresh_token=' . $refresh_token );
+                $response = curl('POST', $this->oauth_url . 'token', 'client_id=' . $client_id . '&client_secret=' . $client_secret . '&grant_type=refresh_token&requested_token_use=on_behalf_of&refresh_token=' . $refresh_token );
                 $p++;
             }
             if ($response['stat']==200) $ret = json_decode($response['body'], true);
             if (!isset($ret['access_token'])) {
-                error_log1($this->oauth_url . 'token' . '?client_id=' . $this->client_id . '&client_secret=' . $this->client_secret . '&grant_type=refresh_token&requested_token_use=on_behalf_of&refresh_token=' . substr($refresh_token, 0, 20) . '******' . substr($refresh_token, -20));
+                error_log1($this->oauth_url . 'token' . '?client_id=' . $client_id . '&client_secret=' . $client_secret . '&grant_type=refresh_token&requested_token_use=on_behalf_of&refresh_token=' . substr($refresh_token, 0, 20) . '******' . substr($refresh_token, -20));
                 error_log1('failed to get [' . $this->disktag . '] access_token. response: ' . $response['body']);
                 $response['body'] = json_encode(json_decode($response['body']), JSON_PRETTY_PRINT);
                 $response['body'] .= "<br>\n" . 'failed to get [' . $this->disktag . '] access_token.';
@@ -690,35 +696,37 @@ class Onedrive {
             $url = $path;
         } else {
             $url = $this->api_url . $this->ext_api_url;
-            if ($path=='' or $path=='/') {
-                $url .= '/';
-            } else {
-                $url .= ':' . $path;
-                if (substr($url,-1)=='/') $url=substr($url,0,-1);
-            }
             if ($method=='GET') {
-                $method = 'GET'; // do nothing
-            } elseif ($method=='PUT') {
-                if ($path=='' or $path=='/') {
-                    $url .= 'content';
-                } else {
-                    $url .= ':/content';
-                }
-                $headers['Content-Type'] = 'text/plain';
-            } elseif ($method=='PATCH') {
-                $headers['Content-Type'] = 'application/json';
-            } elseif ($method=='POST') {
-                $headers['Content-Type'] = 'application/json';
-            } elseif ($method=='DELETE') {
-                $headers['Content-Type'] = 'application/json';
+                $url .= $path;
             } else {
                 if ($path=='' or $path=='/') {
-                    $url .= $method;
+                    $url .= '/';
                 } else {
-                    $url .= ':/' . $method;
+                    $url .= ':' . $path;
+                    if (substr($url,-1)=='/') $url=substr($url,0,-1);
                 }
-                $method='POST';
-                $headers['Content-Type'] = 'application/json';
+                if ($method=='PUT') {
+                    if ($path=='' or $path=='/') {
+                        $url .= 'content';
+                    } else {
+                        $url .= ':/content';
+                    }
+                    $headers['Content-Type'] = 'text/plain';
+                } elseif ($method=='PATCH') {
+                    $headers['Content-Type'] = 'application/json';
+                } elseif ($method=='POST') {
+                    $headers['Content-Type'] = 'application/json';
+                } elseif ($method=='DELETE') {
+                    $headers['Content-Type'] = 'application/json';
+                } else {
+                    if ($path=='' or $path=='/') {
+                        $url .= $method;
+                    } else {
+                        $url .= ':/' . $method;
+                    }
+                    $method='POST';
+                    $headers['Content-Type'] = 'application/json';
+                }
             }
         }
         $headers['Authorization'] = 'Bearer ' . $this->access_token;
