@@ -678,11 +678,9 @@ function adminoperate()
             $result = $drive->addsubscribes ($_POST['user_email'], $_POST['sku'], $del_sku);
             //error_log1('Addlin' . json_encode($result));
             if ($result['stat']==200) {
-                $data['msg'] = '分配许可成功';
-                return output(response(0, json_encode($data))); //创建成功，分配许可成功
+                return output(response(0, '分配许可成功')); //创建成功，分配许可成功
             } else {
-                $data['msg'] = '分配许可失败';
-                return output(response(1, json_encode($data))); //创建成功，分配许可失败
+                return output(response(1, '分配许可失败' . json_encode($result))); //创建成功，分配许可失败
             }
         //}
     }
@@ -692,9 +690,9 @@ function adminoperate()
         return output(response($result['stat'], $result['body']));
     }
     if ($_GET['a'] == 'admin_resetpassword') {
-        $password = getRandomPass($_POST['email']);
+        $password = getRandomPass(splitfirst($_POST['email'], '@')[0]);
         $result = $drive->resetpassword($_POST['email'], $password);
-        if ($result['stat']==204) return output(response(0, '重置 ' . $_POST['email'] . ' 成功'));
+        if ($result['stat']==204) return output(response(0, '重置 ' . $_POST['email'] . ' 成功', $password));
         return output(response($result['stat'], $result['body']));
     }
     if ($_GET['a'] == 'activeaccount') {
@@ -1654,7 +1652,7 @@ function render_list($drive = null)
     $html .= '
     </body>
 <!--
-        <a class="layui-btn layui-btn-primary layui-btn-xs" lay-event="resetpassword">重置密码</a>
+        
 {{# if (d.isGlobalAdmin!=true) { }}
         <a class="layui-btn layui-btn-warm layui-btn-xs" lay-event="setuserasadminbyid">设为管理</a>
 {{# } else { }}
@@ -1665,6 +1663,7 @@ function render_list($drive = null)
 {{# } }}
 -->
     <script type="text/html" id="buttons">
+        <a class="layui-btn layui-btn-primary layui-btn-xs" lay-event="resetpassword">重置密码</a>
         <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del"><i class="layui-icon layui-icon-delete"></i> 删除</a>
     </script>
     <script src="https://www.layuicdn.com/layui-v2.6.8/layui.js"></script>
@@ -1784,7 +1783,7 @@ function render_list($drive = null)
                         return s;
                     }},
                     {field:\'createdDateTime\', title: \'创建时间\', align: \'center\'},
-                    {/*fixed:\'right\',*/title: \'操作\', width: 100, align:\'center\', toolbar: \'#buttons\'}
+                    {/*fixed:\'right\',*/title: \'操作\', width: 160, align:\'center\', toolbar: \'#buttons\'}
                 ]],
                 done: function (res, curr, count) {
                     layui.table.cache["table"].forEach(function(i) {
@@ -1812,18 +1811,39 @@ function render_list($drive = null)
                         },\'json\');
                     });
                 }
-                /*if (obj.event === \'resetpassword\') {
-                    layer.msg("前面的区域，以后再来探索吧！");return;
+                if (obj.event === \'resetpassword\') {
+                    //layer.msg("前面的区域，以后再来探索吧！");return;
                     layer.confirm(\'重置 \' + obj.data.userPrincipalName + \' 密码?\', function(index) {
+                        let loadix = layer.load(2);
                         $.post("?a=admin_resetpassword&account=' . $_SERVER['disktag'] . '",{email:obj.data.userPrincipalName},function(res) {
                             if (res.code == 0) {
                                 layer.closeAll();
-                                //table.reload(\'table\');
+                                layer.confirm("用户名：" + obj.data.userPrincipalName + "<br>密码：" + res.data,
+                                {
+                                    btn: ["复制", "确认"]
+                                }, function (index, layero) {
+                                    layer.closeAll();
+                                    let tmptextarea=document.createElement(\'textarea\');
+                                    document.body.appendChild(tmptextarea);
+                                    tmptextarea.setAttribute(\'style\', \'position:absolute;left:-100px;width:0px;height:0px;\');
+                                    tmptextarea.innerHTML = "用户名：" + obj.data.userPrincipalName + "\n密码：" + res.data;
+                                    tmptextarea.select();
+                                    tmptextarea.setSelectionRange(0, tmptextarea.value.length);
+                                    document.execCommand("copy");
+                                    layer.msg("复制成功");
+                                }, function (index, layero) {
+                                    layer.closeAll();
+                                });
+                            } else {
+                                layer.closeAll();
+                                console.log(res.code);
+                                console.log(JSON.parse(res.msg));
+                                layer.msg(res.msg);
+                                layer.confirm("注意：<br>1，添加时以全局管理账号授权自动创建方式绑定，而不是手动输入id&secret;<br>2，此账号当前仍然为全局管理，且未被禁止");
                             }
-                            layer.msg(res.msg);
                         },\'json\');
                     });
-                }*/
+                }
                 /*if (obj.event === \'accountactive\') {
                     layer.confirm(\'允许 \' + obj.data.userPrincipalName + \' 登录?\', function(index) {
                         $.post("?a=activeaccount&account=' . $_SERVER['disktag'] . '",{email:obj.data.userPrincipalName},function(res) {
@@ -1927,8 +1947,8 @@ function render_list($drive = null)
                     location:$(\'#location\').val(),
                     sku:skus,
                 };
+                let loadix = layer.load(2);
                 $.post("?a=admin_add_account&account=' . $_SERVER['disktag'] . '",data,function(res) {
-                    let loadix = layer.load(2);
                     //console.log(res.code + res.msg);
                     if (res.code == 0) {
                         skus.forEach(function(i) {
@@ -1999,13 +2019,10 @@ function render_list($drive = null)
                         skus.forEach(function(i) {
                             license_exist[i].used++;
                         });
-                        let r = JSON.parse(res.msg);
-                        layer.msg(r.msg);
                         layer.closeAll();
                         //table.reload(\'table\');
                         let lineIndex = $(\'#lineIndex\').val();
                         let tmpa = new Array();
-                        //let s = \'<a lay-event="addsubscribe" lineIndex="\' + lineIndex + \'">\';
                         let s = "";
                         if (skus=="") {
                             s += \'<span style="color:#ff461f">无许可</span>\';
@@ -2018,12 +2035,11 @@ function render_list($drive = null)
                                 }
                                 tmpa.push({skuId : i});
                             })
-                            //s = s.substr(0, s.length-4);
                         }
-                        //s += \'</a>\';
                         //console.log(tmpa);
                         layui.table.cache["table"][lineIndex].assignedLicenses = tmpa;
-                        document.querySelectorAll("td[data-field=\'assignedLicenses\'] div a")[lineIndex].innerHTML = s;
+                        document.querySelectorAll("a[lay-event=\'addsubscribe\']")[lineIndex].innerHTML = s;
+                        layer.tips(res.msg, document.querySelectorAll("td[data-field=\'assignedLicenses\']")[lineIndex]);
                     } else {
                         layer.msg(res.msg);
                         if (res.code == 2) {
