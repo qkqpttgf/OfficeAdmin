@@ -23,7 +23,7 @@ class OnedriveCN extends Onedrive {
             }
             $this->client_secret = urlencode($this->client_secret);
             $this->tenant_id = getConfig('tenant_id', $tag);
-            $this->oauth_url1 = 'https://microsoftgraph.chinacloudapi.cn/' . $this->tenant_id . '/oauth2/v2.0/token';
+            $this->oauth_url1 = 'https://login.partner.microsoftonline.cn/' . $this->tenant_id . '/oauth2/v2.0/token';
             $this->scope = urlencode($this->scope);
             if (getConfig('refresh_token', $tag)) $res = $this->get_access_token1(getConfig('refresh_token', $tag), $default_client_id, $default_client_secret);
             $res = $this->get_access_token();
