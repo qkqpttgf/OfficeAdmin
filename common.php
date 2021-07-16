@@ -680,7 +680,7 @@ function adminoperate()
             if ($result['stat']==200) {
                 return output(response(0, '分配许可成功')); //创建成功，分配许可成功
             } else {
-                return output(response(1, '分配许可失败' . json_encode($result))); //创建成功，分配许可失败
+                return output(response($result['stat'], '分配许可失败', $result['body'])); //创建成功，分配许可失败
             }
         //}
     }
@@ -758,9 +758,9 @@ function getRandomPass($user) {
         else $max3 = 1;
         for ($i=0;$i<$max3;$i++) $str .= $strPol[rand(0, 9)];
 
-        if (strpos(strtolower($str), strtolower($user))===false) $p = 1;
-        else while (strpos(strtolower($str), strtolower($user))>-1) {
-            $t = strpos(strtolower($str), strtolower($user));
+        if (stripos($str, $user)===false) $p = 1;
+        else while (stripos($str, $user)>-1) {
+            $t = stripos($str, $user);
             $str = substr($str, 0, $t) . substr($str, $t+1);
         }
     }
@@ -1715,7 +1715,8 @@ function render_list($drive = null)
                 height: \'full-100\',
                 loading: true,
                 limit: 100,
-                page: true,
+                //page: true,
+                page: {layout:["prev","page","next","count","refresh","skip"]},
                 cols: [[
                     //align属性是文字在列表中的位置 可选参数left center right
                     //sort属性是排序功能
@@ -1868,7 +1869,7 @@ function render_list($drive = null)
                             $(\'#addsubscribe\').hide();
                         },
                         skin: \'layui-layer-rim\', //加上边框
-                        area: [\'80%\', \'80%\'], //宽高
+                        area: [\'95%\', \'90%\'], //宽高
                         content: $(\'#addsubscribe\'),
                         success: function(layero, index) {
                             let lineIndex = obj.tr.selector;
@@ -1907,7 +1908,7 @@ function render_list($drive = null)
                         $(\'#add_account_content\').hide();
                     },
                     skin: \'layui-layer-rim\', //加上边框
-                    area: [\'80%\', \'80%\'], //宽高
+                    area: [\'95%\', \'90%\'], //宽高
                     content: $(\'#add_account_content\'),
                     success: function(layero, index) {
                         $("#addaccount_sku")[0].innerHTML = "";
@@ -2002,6 +2003,11 @@ function render_list($drive = null)
                 $("input:checkbox[name=\'sku1\']:checked").each(function(i) {
                     skus[i] = $(this).val();
                 });
+                //console.log(JSON.stringify(skus)===$(\'#assignedLicenses\').val());
+                if (JSON.stringify(skus)==$(\'#assignedLicenses\').val()) {
+                    layer.msg("没有改变");
+                    return false;
+                }
                 var data = {
                     user_email:$(\'#user_email\').val(),
                     assignedLicenses:$(\'#assignedLicenses\').val(),
@@ -2041,16 +2047,20 @@ function render_list($drive = null)
                         document.querySelectorAll("a[lay-event=\'addsubscribe\']")[lineIndex].innerHTML = s;
                         layer.tips(res.msg, document.querySelectorAll("td[data-field=\'assignedLicenses\']")[lineIndex]);
                     } else {
+                        layer.close(loadix);
                         layer.msg(res.msg);
+                        console.log(res.code + " " + res.msg);
                         if (res.code == 2) {
                             window.location.reload(); //登录过期
                         }
-                        if (res.code > 1) alert(res.code + JSON.parse(res.msg).error.message);
-                        else {
-                            alert(res.code + JSON.parse(res.msg).msg);
+                        if (res.code > 1) {
+                            console.log(JSON.parse(res.data));
+                            alert(JSON.parse(res.data).error.message);
+                        } else {
+                            console.log(res.data);
+                            //alert(res.code + res.msg + JSON.parse(res.data));
                         }
                     }
-                    layer.close(loadix);
                 },\'json\');
             });
             form.on("switch(accountactive)", function(obj) {
