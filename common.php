@@ -1445,6 +1445,7 @@ function render_list($drive = null)
     global $constStr;
     global $license;
     $driveok = driveisfine($drive);
+    $mayResetPass = getcache('tmp_access_token', $_SERVER['disktag'])!='';
     $disktags = explode('|', getConfig('disktag'));
     $html = '
 <!DOCTYPE html>
@@ -1512,6 +1513,7 @@ function render_list($drive = null)
         $html .= 'Something Error<br>' . $drive->error['stat'] . '<br>' . $drive->error['body'] . '<br>.';
     }
     if ($driveok) {
+        $skus = $drive->getSku();
         $html .= '
         <div id="add_account_content" class="layui-form layui-form-pane" style="display: none;margin:1rem 3rem;">
             <form class="layui-form">
@@ -1526,7 +1528,7 @@ function render_list($drive = null)
                     </div>
                 </div>
                 <div class="layui-form-item">
-                    <label class="layui-form-label">用户账号 *</label>
+                    <label class="layui-form-label"><span style="color:red;">用户账号 *</span></label>
                     <div class="layui-input-inline">
                         <input type="text" placeholder="请输入英文" class="layui-input" id="add_user" pattern="[A-z0-9]{1,50}" required lay-verify="required">
                     </div>
@@ -1556,7 +1558,7 @@ function render_list($drive = null)
                     </div>
                 </div>
                 <div class="layui-form-item">
-                    <label class="layui-form-label">国家(地区) *</label>
+                    <label class="layui-form-label"><span style="color:red;">国家(地区) *</span></label>
                     <div class="layui-input-inline">
                         <select name="location" required lay-verify="required" id="location">';
         $locations = [
@@ -1584,20 +1586,7 @@ function render_list($drive = null)
                 </div>
                 <div class="layui-form-item">
                     <label class="layui-form-label">许可证</label>
-                    <div class="layui-input-inline" id="addaccount_sku">';
-        $skuId = $license;
-        $skus = $drive->getSku();
-        /*foreach ($skus as $id => $v) {
-            $name = '';
-            if (isset($skuId[$id])) {
-                $name = $skuId[$id]['name'];
-            } else {
-                $name = $v['name'];
-            }
-            $html .= '
-                        <input type="checkbox" name="sku" title="' . $name . '(' . $v['used'] . '/' . $v['total'] . ')" value="' . $id . '" lay-skin="primary"' . (($v['total']-$v['used']<1)?' disabled':'') . '>';
-        }*/
-        $html .= '
+                    <div class="layui-input-inline" id="addaccount_sku">
                     </div>
                 </div>
                 <div class="layui-form-item">
@@ -1618,18 +1607,7 @@ function render_list($drive = null)
                 </div>
                 <div class="layui-form-item">
                     <label class="layui-form-label">许可证</label>
-                    <div class="layui-input-inline" id="license_sku">';
-        /*foreach ($skus as $id => $v) {
-            $name = '';
-            if (isset($skuId[$id])) {
-                $name = $skuId[$id]['name'];
-            } else {
-                $name = $v['name'];
-            }
-            $html .= '
-                        <input type="checkbox" name="sku1" lay-filter="subscribe_sku" title="' . $name . '(' . $v['used'] . '/' . $v['total'] . ')" value="' . $id . '" lay-skin="primary"' . (($v['total']-$v['used']<1)?' disabled':'') . '>';
-        }*/
-        $html .= '
+                    <div class="layui-input-inline" id="license_sku">
                     </div>
                 </div>
                 <div class="layui-form-item">
@@ -1652,7 +1630,8 @@ function render_list($drive = null)
     $html .= '
     </body>
 <!--
-        
+        <a class="layui-btn layui-btn-primary layui-btn-xs" lay-event="resetpassword">重置密码</a>
+        <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del"><i class="layui-icon layui-icon-delete"></i> 删除</a>
 {{# if (d.isGlobalAdmin!=true) { }}
         <a class="layui-btn layui-btn-warm layui-btn-xs" lay-event="setuserasadminbyid">设为管理</a>
 {{# } else { }}
@@ -1663,8 +1642,7 @@ function render_list($drive = null)
 {{# } }}
 -->
     <script type="text/html" id="buttons">
-        <a class="layui-btn layui-btn-primary layui-btn-xs" lay-event="resetpassword">重置密码</a>
-        <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del"><i class="layui-icon layui-icon-delete"></i> 删除</a>
+        <a class="layui-btn layui-btn-primary layui-btn-sm" lay-event="operate">操作 <i class="layui-icon layui-icon-down"></i></a>
     </script>
     <script src="https://www.layuicdn.com/layui-v2.6.8/layui.js"></script>
     <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.6.0/jquery.js"></script>
@@ -1672,6 +1650,7 @@ function render_list($drive = null)
         var licenseObject = ' . json_encode($license) . ';
         var licenseObjectId = ' . json_encode(array_keys($license)) . ';
         var license_exist = ' . json_encode($skus) . ';
+        var disktag = "' . $_SERVER['disktag'] . '";
         layui.use([\'table\',\'form\',\'layer\',"dropdown"], function() {
             var table = layui.table;
             var form = layui.form;
@@ -1688,6 +1667,7 @@ function render_list($drive = null)
                     ,id: 101
                     ,templet: "<a><i class=\"layui-icon layui-icon-logout\"></i> 注销登录</a>"
                 }]
+                ,trigger: "hover"
                 ,click: function(obj){
                     //console.log(obj); console.log(this);
                     if (obj.title=="logout") {
@@ -1707,10 +1687,11 @@ function render_list($drive = null)
                     //layer.tips("点击了："+ obj.title, this.elem, {tips: [1, "#5FB878"]})
                 }
             });';
-    if ($driveok) $html .= '
+    if ($driveok) {
+        $html .= '
             var tableRender = table.render({
                 elem: \'#table\',//表格id
-                url:"?a=getusers&account=' . $_SERVER['disktag'] . '",//list接口地址
+                url:"?a=getusers&account=" + disktag,//list接口地址
                 cellMinWidth: 60,//全局定义常规单元格的最小宽度
                 height: \'full-100\',
                 loading: true,
@@ -1784,7 +1765,7 @@ function render_list($drive = null)
                         return s;
                     }},
                     {field:\'createdDateTime\', title: \'创建时间\', align: \'center\'},
-                    {/*fixed:\'right\',*/title: \'操作\', width: 160, align:\'center\', toolbar: \'#buttons\'}
+                    {/*fixed:\'right\',*/title: \'操作\', width: 100, align:\'center\', toolbar: \'#buttons\'}
                 ]],
                 done: function (res, curr, count) {
                     layui.table.cache["table"].forEach(function(i) {
@@ -1792,75 +1773,85 @@ function render_list($drive = null)
                             $("tr[data-index=" + i.LAY_TABLE_INDEX + "]").attr({"style":"background:#87CEEB"});
                             //document.querySelectorAll("a[lay-event=\'del\']")[i.LAY_TABLE_INDEX].setAttribute("class", "layui-btn layui-btn-primary layui-btn-xs");
                         }
+                        dropdown.render({
+                            elem: document.querySelectorAll("a[lay-event=\'operate\']")[i.LAY_TABLE_INDEX] //触发事件的 DOM 对象
+                            //,show: true //外部事件触发即显示
+                            ,data: [';
+        if ($mayResetPass) $html .= '{
+                                title: "重置密码"
+                                ,id: "resetpassword"
+                            },';
+        $html .= '{
+                                title: "删除"
+                                ,id: "del"
+                                ,templet: "<span style=\"color:red;\">删除</span>"
+                            }]
+                            //,trigger: "hover"
+                            ,align: "right"
+                            //,ready: function(pan, ele) {
+                            //    console.log(this);
+                            //}
+                            ,click: function(menudata) {
+                                if (menudata.id === "del") {
+                                    layer.confirm(\'真的删除 \' + i.userPrincipalName + \' 吗\', function(index) {
+                                        let loadix = layer.load(2);
+                                        $.post("?a=admin_delete&account=" + disktag,{email:i.userPrincipalName,id:i.id},function(res) {
+                                            if (res.code == 0) {
+                                                document.querySelector("tr[data-index=\"" + i.LAY_TABLE_INDEX + "\"]").remove();//删除表格这行数据
+                                            }
+                                            layer.close(loadix);
+                                            layer.msg(res.msg);
+                                            if (res.code == 2) {
+                                                window.location.reload(); //登录过期
+                                            }
+                                        },\'json\');
+                                    });
+                                }';
+        if ($mayResetPass) $html .= '
+                                if (menudata.id === "resetpassword") {
+                                    layer.confirm(\'重置 \' + i.userPrincipalName + \' 密码?\', function(index) {
+                                        let loadix = layer.load(2);
+                                        $.post("?a=admin_resetpassword&account=" + disktag,{email:i.userPrincipalName},function(res) {
+                                            if (res.code == 0) {
+                                                layer.closeAll();
+                                                layer.confirm("用户名：" + i.userPrincipalName + "<br>密码：" + res.data,
+                                                {
+                                                    btn: ["复制", "确认"]
+                                                }, function (index, layero) {
+                                                    layer.closeAll();
+                                                    let tmptextarea=document.createElement(\'textarea\');
+                                                    document.body.appendChild(tmptextarea);
+                                                    tmptextarea.setAttribute(\'style\', \'position:absolute;left:-100px;width:0px;height:0px;\');
+                                                    tmptextarea.innerHTML = "用户名：" + i.userPrincipalName + "\n密码：" + res.data;
+                                                    tmptextarea.select();
+                                                    tmptextarea.setSelectionRange(0, tmptextarea.value.length);
+                                                    document.execCommand("copy");
+                                                    layer.msg("复制成功");
+                                                }, function (index, layero) {
+                                                    layer.closeAll();
+                                                });
+                                            } else {
+                                                if (res.code == 2) {
+                                                    window.location.reload(); //登录过期
+                                                }
+                                                layer.closeAll();
+                                                console.log(res.code);
+                                                let msg = JSON.parse(res.msg);
+                                                console.log(msg);
+                                                //layer.msg(res.msg);
+                                                layer.confirm(res.code + "<br>" + msg.error.code + "<br>" + msg.error.message + "<br>注意：<br>1，添加时以全局管理账号授权自动创建方式绑定，而不是手动输入id&secret;<br>2，此账号当前仍然为全局管理，且未被禁止");
+                                            }
+                                        },\'json\');
+                                    });
+                                }';
+        $html .= '
+                            }
+                        });
                     });
                 }
             });
                //监听
             table.on(\'tool(table)\', function(obj) {
-                if (obj.event === \'del\') {
-                    layer.confirm(\'真的删除 \' + obj.data.userPrincipalName + \' 吗\', function(index) {
-                        let loadix = layer.load(2);
-                        $.post("?a=admin_delete&account=' . $_SERVER['disktag'] . '",{email:obj.data.userPrincipalName,id:obj.data.id},function(res) {
-                            if (res.code == 0) {
-                                obj.del();//删除表格这行数据
-                            }
-                            layer.close(loadix);
-                            layer.msg(res.msg);
-                            if (res.code == 2) {
-                                window.location.reload(); //登录过期
-                            }
-                        },\'json\');
-                    });
-                }
-                if (obj.event === \'resetpassword\') {
-                    //layer.msg("前面的区域，以后再来探索吧！");return;
-                    layer.confirm(\'重置 \' + obj.data.userPrincipalName + \' 密码?\', function(index) {
-                        let loadix = layer.load(2);
-                        $.post("?a=admin_resetpassword&account=' . $_SERVER['disktag'] . '",{email:obj.data.userPrincipalName},function(res) {
-                            if (res.code == 0) {
-                                layer.closeAll();
-                                layer.confirm("用户名：" + obj.data.userPrincipalName + "<br>密码：" + res.data,
-                                {
-                                    btn: ["复制", "确认"]
-                                }, function (index, layero) {
-                                    layer.closeAll();
-                                    let tmptextarea=document.createElement(\'textarea\');
-                                    document.body.appendChild(tmptextarea);
-                                    tmptextarea.setAttribute(\'style\', \'position:absolute;left:-100px;width:0px;height:0px;\');
-                                    tmptextarea.innerHTML = "用户名：" + obj.data.userPrincipalName + "\n密码：" + res.data;
-                                    tmptextarea.select();
-                                    tmptextarea.setSelectionRange(0, tmptextarea.value.length);
-                                    document.execCommand("copy");
-                                    layer.msg("复制成功");
-                                }, function (index, layero) {
-                                    layer.closeAll();
-                                });
-                            } else {
-                                layer.closeAll();
-                                console.log(res.code);
-                                console.log(JSON.parse(res.msg));
-                                layer.msg(res.msg);
-                                layer.confirm("注意：<br>1，添加时以全局管理账号授权自动创建方式绑定，而不是手动输入id&secret;<br>2，此账号当前仍然为全局管理，且未被禁止");
-                            }
-                        },\'json\');
-                    });
-                }
-                /*if (obj.event === \'accountactive\') {
-                    layer.confirm(\'允许 \' + obj.data.userPrincipalName + \' 登录?\', function(index) {
-                        $.post("?a=activeaccount&account=' . $_SERVER['disktag'] . '",{email:obj.data.userPrincipalName},function(res) {
-                            if (res.code == 0) {
-                                layer.closeAll();
-                                //layui.use(\'table\', function() {
-                                //    var table = layui.table;
-                                    table.reload(\'table\', { //表格的id
-                                        //url:"?a=getusers&account=' . $_SERVER['disktag'] . '",
-                                    });
-                                //})
-                            }
-                            layer.msg(res.msg);
-                        },\'json\');
-                    });
-                }*/
                 if (obj.event === \'addsubscribe\') {
                     layer.open({
                         type: 1,
@@ -1892,7 +1883,7 @@ function render_list($drive = null)
                                 //console.log(license_exist[i]);
                                 let skuname = license_exist[i].name;
                                 if (licenseObjectId.indexOf(i)>-1) skuname = licenseObject[i].name;
-                                $("#license_sku")[0].innerHTML += "<input type=\"checkbox\" name=\"sku1\" lay-filter=\"subscribe_sku\" title=\"" + skuname + " (" + license_exist[i].used + "/" + license_exist[i].total + ")\" value=\"" + i + "\" lay-skin=\"primary\"" + ((license_exist[i].total-license_exist[i].used>0 || licenses.indexOf(i)>-1)?"":" disabled") + " " + ((licenses.indexOf(i)>-1)?" checked":"") + ">";
+                                $("#license_sku")[0].innerHTML += "<input type=\"checkbox\" name=\"sku1\" title=\"" + skuname + " (" + license_exist[i].used + "/" + license_exist[i].total + ")\" value=\"" + i + "\" lay-skin=\"primary\"" + ((license_exist[i].total-license_exist[i].used>0 || licenses.indexOf(i)>-1)?"":" disabled") + " " + ((licenses.indexOf(i)>-1)?" checked":"") + ">";
                                 //console.log($("#license_sku")[0].innerHTML);
                             }
                             form.render("checkbox");
@@ -1916,7 +1907,7 @@ function render_list($drive = null)
                             //console.log(license_exist[i]);
                             let skuname = license_exist[i].name;
                             if (licenseObjectId.indexOf(i)>-1) skuname = licenseObject[i].name;
-                            $("#addaccount_sku")[0].innerHTML += "<input type=\"checkbox\" name=\"sku\" lay-filter=\"subscribe_sku\" title=\"" + skuname + " (" + license_exist[i].used + "/" + license_exist[i].total + ")\" value=\"" + i + "\" lay-skin=\"primary\"" + ((license_exist[i].total-license_exist[i].used>0)?"":" disabled") + ">";
+                            $("#addaccount_sku")[0].innerHTML += "<input type=\"checkbox\" name=\"sku\" title=\"" + skuname + " (" + license_exist[i].used + "/" + license_exist[i].total + ")\" value=\"" + i + "\" lay-skin=\"primary\"" + ((license_exist[i].total-license_exist[i].used>0)?"":" disabled") + ">";
                             //console.log($("#addaccount_sku")[0].innerHTML);
                         }
                         form.render("checkbox");
@@ -1949,7 +1940,7 @@ function render_list($drive = null)
                     sku:skus,
                 };
                 let loadix = layer.load(2);
-                $.post("?a=admin_add_account&account=' . $_SERVER['disktag'] . '",data,function(res) {
+                $.post("?a=admin_add_account&account=" + disktag,data,function(res) {
                     //console.log(res.code + res.msg);
                     if (res.code == 0) {
                         skus.forEach(function(i) {
@@ -2016,7 +2007,7 @@ function render_list($drive = null)
                 };
                 //console.log(data);
                 let loadix = layer.load(2);
-                $.post("?a=add_subscribe&account=' . $_SERVER['disktag'] . '",data,function(res) {
+                $.post("?a=add_subscribe&account=" + disktag,data,function(res) {
                     //console.log(res.code + res.msg);
                     if (res.code == 0) {
                         JSON.parse(data.assignedLicenses).forEach(function(i) {
@@ -2078,7 +2069,7 @@ function render_list($drive = null)
                 //console.log(document.querySelector("td[data-content=\'" + obj.elem.value + "\'] div") );
                 layer.confirm(title, function(index) {
                     let loadix = layer.load(2, {shade: [0.1,"#fff"]});
-                    $.post("?a=" + action + "&account=' . $_SERVER['disktag'] . '",{email:obj.value},function(res) {
+                    $.post("?a=" + action + "&account=" + disktag,{email:obj.value},function(res) {
                         if (res.code == 0) {
                             layer.closeAll();
                             obj.elem.checked = aim;
@@ -2115,7 +2106,7 @@ function render_list($drive = null)
                 //console.log(document.querySelector("td[data-content=\'" + obj.elem.value + "\'] div") );
                 layer.confirm(title, function(index) {
                     let loadix = layer.load(2, {shade: [0.1,"#fff"]});
-                    $.post("?a=" + action + "&account=' . $_SERVER['disktag'] . '",{id:layui.table.cache["table"][obj.elem.getAttribute("lineIndex")].id},function(res) {
+                    $.post("?a=" + action + "&account=" + disktag,{id:layui.table.cache["table"][obj.elem.getAttribute("lineIndex")].id},function(res) {
                         if (res.code == 0) {
                             layer.closeAll();
                             obj.elem.checked = aim;
@@ -2132,9 +2123,10 @@ function render_list($drive = null)
             });
             $(\'#search_b\').click(function() {
                 table.reload("table",{
-                    url:"?a=getusers&account=' . $_SERVER['disktag'] . '&search=" + $(\'#search_t\').val(),
+                    url:"?a=getusers&account=" + disktag + "&search=" + $(\'#search_t\').val(),
                 });
             });';
+    }
     $html .= '
             form.on(\'select(account)\', function (data) {
                     //获取当前选中下拉项的索引
@@ -2145,9 +2137,9 @@ function render_list($drive = null)
                     //let goodsID = data.value;
                 var account = $(\'#account\').val();
                 var text = data.elem[data.elem.selectedIndex].text;
-                $(\'#account\').val("' . $_SERVER['disktag'] . '");
+                $(\'#account\').val(disktag);
                 form.render("select");
-                if (account!="' . $_SERVER['disktag'] . '") {
+                if (account!=disktag) {
                     layer.confirm(\'确认切换 \' + text + \' 全局?\', function(index) {
                         location.href = "?account=" + account;
                     });
