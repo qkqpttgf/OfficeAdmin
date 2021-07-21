@@ -734,6 +734,17 @@ function adminoperate()
             return output(response(0, "取消管理成功"));
         }
     }
+    if ($_GET['a'] == 'admin_addRegion') {
+        $user_email = !empty($_POST['email']) ? $_POST['email'] : 0;
+        $region = getConfig('defaultCountry', $_SERVER['disktag']);
+        $result = $drive->setUserUsageLocation($user_email, $region);
+        //error_log1(json_encode($result));
+        if ($result['stat']==204) {
+            return output(response(0, "添加地区成功", $region));
+        } else {
+            return output(response($result['stat'], "添加地区失败", $result['body']));
+        }
+    }
 
     return $tmparr;
 }
@@ -1558,7 +1569,7 @@ function render_list($drive = null)
                     </div>
                 </div>
                 <div class="layui-form-item">
-                    <label class="layui-form-label"><span style="color:red;">国家(地区) *</span></label>
+                    <label class="layui-form-label" id="location-label"><span style="color:red;">国家(地区) *</span></label>
                     <div class="layui-input-inline">
                         <select name="location" required lay-verify="required" id="location">';
         $locations = [
@@ -1571,6 +1582,7 @@ function render_list($drive = null)
             'GB' => '英国'
         ];
         $defaultCountry = getConfig('defaultCountry', $_SERVER['disktag']);
+        if ($defaultCountry=='') $defaultCountry = $drive->getOrganization();
         if (!isset($locations[$defaultCountry])) $html .= '
                             <option value="' . $defaultCountry . '">' . $defaultCountry . '</option>';
         else $html .= '
@@ -1773,7 +1785,7 @@ function render_list($drive = null)
                             $("tr[data-index=" + i.LAY_TABLE_INDEX + "]").attr({"style":"background:#87CEEB"});
                             //document.querySelectorAll("a[lay-event=\'del\']")[i.LAY_TABLE_INDEX].setAttribute("class", "layui-btn layui-btn-primary layui-btn-xs");
                         }
-                        dropdown.render({
+                        let lineDrop = dropdown.render({
                             elem: document.querySelectorAll("a[lay-event=\'operate\']")[i.LAY_TABLE_INDEX] //触发事件的 DOM 对象
                             //,show: true //外部事件触发即显示
                             ,data: [';
@@ -1789,7 +1801,8 @@ function render_list($drive = null)
                             //,trigger: "hover"
                             ,align: "right"
                             //,ready: function(pan, ele) {
-                            //    console.log(this);
+                            //    console.log(lineDrop);
+                            //    console.log(i.usageLocation);
                             //}
                             ,click: function(menudata) {
                                 if (menudata.id === "del") {
@@ -1803,6 +1816,24 @@ function render_list($drive = null)
                                             layer.msg(res.msg);
                                             if (res.code == 2) {
                                                 window.location.reload(); //登录过期
+                                            }
+                                        },\'json\');
+                                    });
+                                }
+                                if (menudata.id === "addRegion") {
+                                    layer.confirm(\'添加默认地区？\', function(index) {
+                                        let loadix = layer.load(2);
+                                        $.post("?a=admin_addRegion&account=" + disktag,{email:i.userPrincipalName,id:i.id},function(res) {
+                                            if (res.code == 0) {
+                                                document.querySelector("td[data-field=\"usageLocation\"]")[i.LAY_TABLE_INDEX].innerHTML = res.data;
+                                            }
+                                            layer.close(loadix);
+                                            layer.msg(res.msg);
+                                            if (res.code == 2) {
+                                                window.location.reload(); //登录过期
+                                            } else if (res.code>0) {
+                                                console.log(res.data);
+                                                layer.msg("出错，查看控制台");
                                             }
                                         },\'json\');
                                     });
@@ -1847,6 +1878,14 @@ function render_list($drive = null)
         $html .= '
                             }
                         });
+                        if (i.usageLocation==null) {
+                            lineDrop.config.data.unshift({
+                                title: "添加地区"
+                                ,id: "addRegion"
+                                //,templet: "<span style=\"color:red;\">删除</span>"
+                            });
+                            //dropdown.reload();
+                        }
                     });
                 }
             });
@@ -1922,7 +1961,7 @@ function render_list($drive = null)
                 }
                 if ($(\'#location\').val()=="") {
                     //layer.msg("选择地区");
-                    layer.tips("选择地区", "#location");
+                    layer.tips("选择地区", "#location-label");
                     return false;
                 }
                 let skus = new Array();
