@@ -253,12 +253,31 @@ class Onedrive {
         $value = json_decode($result['body'], true)['value'];
         foreach ($value as $s) {
             if ($s['capabilityStatus']=='Enabled') {
+                //$skus[$s['skuId']] = $s;
                 $skus[$s['skuId']]['name'] = $s['skuPartNumber'];
                 $skus[$s['skuId']]['used'] = $s['consumedUnits'];
                 $skus[$s['skuId']]['total'] = $s['prepaidUnits']['enabled'];
             }
         }
         return $skus;
+    }
+    public function getOrganization() {
+        $api = "/v1.0/organization";
+        $arr = $this->MSAPI('GET', $api);
+        if ($arr['stat']!=200) {
+            return $arr;
+            //$html = $arr['stat'] . json_encode(json_decode($arr['body'], true), JSON_PRETTY_PRINT);
+            //return message($html);
+        }
+        $result = json_decode($arr['body'], true)['value'][0];
+        $tmp['defaultCountry'] = $result['countryLetterCode'];
+        setConfig($tmp, $this->disktag);
+        return $result['countryLetterCode'];
+    }
+    public function setUserUsageLocation($user_email, $region) {
+        $url="/v1.0/users/" . $user_email;
+        $jsdata='{"usageLocation":"' . $region . '"}';
+        return $this->MSAPI('PATCH', $url, $jsdata);
     }
 
     public function AddDisk() {
