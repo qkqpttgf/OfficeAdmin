@@ -9,6 +9,10 @@ $license = [
         'SYSNAME' => 'DEVELOPERPACK_E5',
         'name' => 'E5开发者'
     ],
+    '189a915c-fe4f-4ffa-bde4-85b9628d07a0' => [
+        'SYSNAME' => 'DEVELOPERPACK',
+        'name' => 'E3开发者'
+    ],
     'f30db892-07e9-47e9-837c-80727f46fd3d' => [
         'SYSNAME' => 'FLOW_FREE',
         'name' => 'Microsoft Power Automate Free'
