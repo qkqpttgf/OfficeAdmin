@@ -1,3 +1,5 @@
+20220717更新：首页为迷惑性登录页面，在这里输入密码是没用的，默认请在`?login=admin`登录，建议修改登录接口。  
+
 跟OneManager一样，可以部署在Heroku/Glitch/SCF/CFC/FC/FG上。
 
 [![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/qkqpttgf/OfficeAdmin)
