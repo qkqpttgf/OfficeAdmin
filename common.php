@@ -116,7 +116,7 @@ function main($path)
         return output(
             file_get_contents($filename),
             200,
-            [ 'Content-Type' => $mimetype]
+            [ 'Content-Type' => $mimetype, 'Cache-Control' => 'max-age=' . 3*24*60*60 ]
         );
     }
 
@@ -126,27 +126,29 @@ function main($path)
     } else {
         $adminloginpage = getConfig('adminloginpage');
     }
-    
-        if (isset($_POST['password1'])) {
-            $compareresult = compareadminsha1($_POST['password1'], $_POST['timestamp'], getConfig('admin'));
-            if ($compareresult=='') {
-                $url = $_SERVER['PHP_SELF'];
-                if ($_GET) {
-                    $tmp = null;
-                    $tmp = '';
-                    foreach ($_GET as $k => $v) {
-                        if ($k!='setup') {
-                            if ($v===true) $tmp .= '&' . $k;
-                            else $tmp .= '&' . $k . '=' . $v;
+    if (isset($_GET['login'])) {
+        if ($_GET['login']===$adminloginpage) {
+            if (isset($_POST['password1'])) {
+                $compareresult = compareadminsha1($_POST['password1'], $_POST['timestamp'], getConfig('admin'));
+                if ($compareresult=='') {
+                    $url = $_SERVER['PHP_SELF'];
+                    /*if ($_GET) {
+                        $tmp = null;
+                        $tmp = '';
+                        foreach ($_GET as $k => $v) {
+                            if ($k!='setup') {
+                                if ($v===true) $tmp .= '&' . $k;
+                                else $tmp .= '&' . $k . '=' . $v;
+                            }
                         }
-                    }
-                    $tmp = substr($tmp, 1);
-                    if ($tmp!='') $url .= '?' . $tmp;
-                }
-                return adminform('admin', adminpass2cookie('admin', getConfig('admin')), $url);
-            } else return adminform($compareresult);
-        }// else return adminform();
-
+                        $tmp = substr($tmp, 1);
+                        if ($tmp!='') $url .= '?' . $tmp;
+                    }*/
+                    return adminform('admin', adminpass2cookie('admin', getConfig('admin')), $url);
+                } else return adminform($compareresult);
+            } else return adminform();
+        }
+    }
     if ( isset($_COOKIE['admin'])&&compareadminmd5($_COOKIE['admin'], 'admin', getConfig('admin')) ) {
         $_SERVER['admin']=1;
         $_SERVER['needUpdate'] = needUpdate();
@@ -157,7 +159,7 @@ function main($path)
     // login
     if (!$_SERVER['admin']) {
         if (isset($_GET['a'])) return output(response(2, "过期，请重新登录<script>window.location.reload();</script>"));
-        else return adminform();
+        else return adminform();//output("请找到登录接口登入。", 401);
     }
 
     if (isset($_GET['setup']))
@@ -574,7 +576,8 @@ function adminform($name = '', $pass = '', $path = '')
         }
     }
 </script>
-<script src="https://cdn.bootcss.com/js-sha1/0.6.0/sha1.min.js"></script>';
+<script src="files/sha1.min.js"></script>
+<!--<script src="https://cdn.bootcss.com/js-sha1/0.6.0/sha1.min.js"></script>-->';
     $html .= '</html>';
     return output($html, $statusCode);
 }
@@ -1126,7 +1129,8 @@ function EnvOpt($needUpdate = 0)
         $Driver_arr = scandir(__DIR__ . $slash . 'disk');
         if (count($disktags)>1) {
             $frame .= '
-<script src="//cdn.bootcss.com/Sortable/1.8.3/Sortable.js"></script>
+<!--<script src="//cdn.bootcss.com/Sortable/1.8.3/Sortable.js"></script>-->
+<script src="files/Sortable.js"></script>
 <style>
     .sortable-ghost {
         opacity: 0.4;
@@ -1292,7 +1296,7 @@ function EnvOpt($needUpdate = 0)
         }
 
         $frame .= '<br>
-<script src="https://cdn.bootcss.com/js-sha1/0.6.0/sha1.min.js"></script>
+<script src="files/sha1.min.js"></script>
 <table>
     <form id="change_pass" name="change_pass" action="" method="POST" onsubmit="return changePassword(this);">
     <tr>
@@ -1467,7 +1471,8 @@ function render_list($drive = null)
         <meta http-equiv="content-type" content="text/html; charset=utf-8" />
         <meta name=viewport content="width=device-width,initial-scale=1">
         <title>Microsoft Office365 全局管理</title>
-        <link rel="stylesheet" href="https://www.layuicdn.com/layui-v2.6.8/css/layui.css">
+        <!--<link rel="stylesheet" href="https://www.layuicdn.com/layui-v2.6.8/css/layui.css">-->
+        <link rel="stylesheet" href="layui/css/layui.css">
         <link href="files/mslogo.png" rel="icon" type="image/png">
         <style type="text/css">
             .layui-table-cell {
@@ -1658,8 +1663,10 @@ function render_list($drive = null)
     <script type="text/html" id="buttons">
         <a class="layui-btn layui-btn-primary layui-btn-sm" lay-event="operate">操作 <i class="layui-icon layui-icon-down"></i></a>
     </script>
-    <script src="https://www.layuicdn.com/layui-v2.6.8/layui.js"></script>
-    <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.6.0/jquery.js"></script>
+    <!--<script src="https://www.layuicdn.com/layui-v2.6.8/layui.js"></script>-->
+    <script src="layui/layui.js"></script>
+    <!--<script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.6.0/jquery.js"></script>-->
+    <script src="layui/jquery.js"></script>
     <script type="text/javascript" charset="utf-8">
         var licenseObject = ' . json_encode($license) . ';
         var licenseObjectId = ' . json_encode(array_keys($license)) . ';
