@@ -107,7 +107,7 @@ function main($path)
     if ($_SERVER['timezone']=='') $_SERVER['timezone'] = 0;
 
     if (substr($path, 0, 7)=='/layui/' || substr($path, 0, 7)=='/files/') {
-        $filename = '.' . str_replace('/', $slash, $path);
+        $filename = __DIR__ . str_replace('/', $slash, path_format($path));
         $mimetype = 'text/plain; charset=utf-8';
         if (substr($path, -3)=='.js') $mimetype = 'application/javascript';
         if (substr($path, -4)=='.css') $mimetype = 'text/css';
