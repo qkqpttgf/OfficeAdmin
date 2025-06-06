@@ -18,3 +18,5 @@
 > 为用户分配订阅许可（直接点击许可栏）  
 > 设置/取消全局管理  
 > 重置密码（需要以委托权限，所以90天至少访问一次该盘的前台或后台，以获取新token）  
+
+[![Powered by DartNode](https://dartnode.com/branding/DN-Open-Source-sm.png)](https://dartnode.com "Powered by DartNode - Free VPS for Open Source")  
